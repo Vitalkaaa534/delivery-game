@@ -2,65 +2,192 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Hardcore Delivery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Delivery Simulator</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
     body {
       margin: 0;
       padding: 0;
-      background-color: #1a1a1a;
+      background-color: #121212;
       color: #ffffff;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       height: 100vh;
+      overflow: hidden;
+      user-select: none;
     }
-    .card {
-      background: #2a2a2a;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      width: 80%;
+
+    .hud {
+      width: 100%;
+      padding: 10px 15px;
+      background: #1e1e1e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      z-index: 10;
     }
-    button {
-      background: #e67e22;
-      border: none;
-      color: white;
-      padding: 12px 24px;
-      font-size: 16px;
+    .hud-item {
+      font-size: 14px;
       font-weight: bold;
-      border-radius: 8px;
+    }
+    .val {
+      color: #2ecc71;
+    }
+
+    #gameCanvas {
+      background: #2c3e50;
+      display: block;
+      margin: 0 auto;
+      border-left: 4px solid #f1c40f;
+      border-right: 4px solid #f1c40f;
+    }
+
+    .controls {
+      width: 100%;
+      padding: 15px;
+      background: #1e1e1e;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .btn {
+      background: #34495e;
+      color: white;
+      border: none;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 0 #1a252f;
       cursor: pointer;
-      margin-top: 15px;
+    }
+    .btn:active {
+      transform: translateY(4px);
+      box-shadow: none;
+      background: #e67e22;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2 id="user-name">Привіт, Кур'єр!</h2>
-    <p>Твій баланс: <b style="color: #2ecc71;">0 ₴</b></p>
-    <p>Стан транспорту: 100%</p>
-    <button onclick="testVibration()">Тест вібрації Telegram</button>
+
+  <div class="hud">
+    <div class="hud-item">💰 Бюджет: <span class="val" id="money">250 ₴</span></div>
+    <div class="hud-item">⚡ Швидкість: <span id="speed">0</span> км/г</div>
+    <div class="hud-item">📦 Вантаж: <span style="color:#e74c3c;" id="hp">100%</span></div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="controls">
+    <button class="btn" id="btnLeft">◀</button>
+    <button class="btn" id="btnGas">🛵</button>
+    <button class="btn" id="btnRight">▶</button>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      document.getElementById('user-name').innerText = `Привіт, ${tg.initDataUnsafe.user.first_name}!`;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = Math.min(window.innerWidth - 20, 360);
+    canvas.height = window.innerHeight - 180;
+
+    let player = {
+      x: canvas.width / 2 - 15,
+      y: canvas.height - 70,
+      width: 30,
+      height: 50,
+      speed: 0,
+      maxSpeed: 8
+    };
+
+    let roadOffsetY = 0;
+    let isAccelerating = false;
+
+    function draw() {
+      ctx.fillStyle = '#34495e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([20, 20]);
+      ctx.lineDashOffset = -roadOffsetY;
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+
+      ctx.fillStyle = '#e67e22';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillRect(player.x + 5, player.y + 30, 20, 15);
     }
 
-    function testVibration() {
-      if (tg.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
+    function update() {
+      if (isAccelerating) {
+        if (player.speed < player.maxSpeed) player.speed += 0.2;
       } else {
-        alert('Відкрито поза Telegram');
+        if (player.speed > 0) player.speed -= 0.1;
+        if (player.speed < 0) player.speed = 0;
+      }
+
+      roadOffsetY += player.speed;
+      document.getElementById('speed').innerText = Math.round(player.speed * 10);
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnGas = document.getElementById('btnGas');
+
+    function triggerHaptic() {
+      if (tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred('light');
       }
     }
+
+    btnLeft.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (player.x > 10) player.x -= 20;
+      triggerHaptic();
+    });
+
+    btnRight.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (player.x < canvas.width - player.width - 10) player.x += 20;
+      triggerHaptic();
+    });
+
+    btnGas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isAccelerating = true;
+      triggerHaptic();
+    });
+
+    btnGas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      isAccelerating = false;
+    });
+
+    update();
   </script>
 </body>
 </html>
