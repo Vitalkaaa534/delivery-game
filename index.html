@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Delivery Simulator</title>
+  <title>Delivery Simulator - Варіант А</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * {
@@ -49,52 +49,43 @@
       margin: 0 auto;
       border-left: 4px solid #f1c40f;
       border-right: 4px solid #f1c40f;
+      flex-grow: 1;
+      width: 100%;
+      max-width: 420px;
     }
 
-    .controls {
+    .touch-guide {
       width: 100%;
-      padding: 15px;
+      padding: 12px;
       background: #1e1e1e;
       display: flex;
-      justify-content: space-around;
-      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+      border-top: 1px solid #333;
     }
-    .btn {
-      background: #34495e;
-      color: white;
-      border: none;
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      font-size: 24px;
-      font-weight: bold;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 0 #1a252f;
-      cursor: pointer;
-    }
-    .btn:active {
-      transform: translateY(4px);
-      box-shadow: none;
-      background: #e67e22;
+    .touch-zone-hint {
+      width: 48%;
+      padding: 8px;
+      background: #2a2a2a;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
 
   <div class="hud">
-    <div class="hud-item">💰 Заробіток: <span class="val" id="money">0 ₴</span></div>
+    <div class="hud-item">💰 <span class="val" id="money">0 ₴</span></div>
     <div class="hud-item">⚡ <span id="speed">0</span> км/г</div>
-    <div class="hud-item">📦 Вантаж: <span style="color:#e74c3c;" id="hp">100%</span></div>
+    <div class="hud-item">📦 <span style="color:#e74c3c;" id="hp">100%</span></div>
   </div>
 
   <canvas id="gameCanvas"></canvas>
 
-  <div class="controls">
-    <button class="btn" id="btnLeft">◀</button>
-    <button class="btn" id="btnGas">🛵</button>
-    <button class="btn" id="btnRight">▶</button>
+  <div class="touch-guide">
+    <div class="touch-zone-hint">👈 Тисни ліворуч</div>
+    <div class="touch-zone-hint">Тисни праворуч 👉</div>
   </div>
 
   <script>
@@ -104,17 +95,20 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    canvas.width = Math.min(window.innerWidth - 20, 360);
-    canvas.height = window.innerHeight - 180;
+    function resizeCanvas() {
+      canvas.width = Math.min(window.innerWidth, 420);
+      canvas.height = window.innerHeight - 100;
+    }
+    resizeCanvas();
 
     let player = {
       x: canvas.width / 2 - 15,
-      y: canvas.height - 70,
+      y: canvas.height - 80,
       width: 30,
       height: 50,
       speed: 0,
       maxSpeed: 8,
-      steerSpeed: 4.5
+      steerSpeed: 5.5
     };
 
     let roadOffsetY = 0;
@@ -124,7 +118,7 @@
     let spawnTimer = 0;
     let gameOver = false;
 
-    let controlsState = { left: false, right: false, gas: false };
+    let controlsState = { left: false, right: false };
 
     function spawnObstacle() {
       const size = 30 + Math.random() * 15;
@@ -151,6 +145,7 @@
       ctx.fillStyle = '#34495e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Дорожня розмітка
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.setLineDash([20, 20]);
@@ -160,6 +155,7 @@
       ctx.lineTo(canvas.width / 2, canvas.height);
       ctx.stroke();
 
+      // Перешкоди
       obstacles.forEach(obs => {
         if (obs.type === 'pothole') {
           ctx.fillStyle = '#1a252f';
@@ -172,21 +168,24 @@
         }
       });
 
+      // Скутер
       ctx.fillStyle = '#e67e22';
       ctx.fillRect(player.x, player.y, player.width, player.height);
 
+      // Термосумка
       ctx.fillStyle = '#2ecc71';
       ctx.fillRect(player.x + 5, player.y + 30, 20, 15);
 
       if (gameOver) {
-        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px sans-serif';
+        ctx.font = 'bold 22px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('📦 Вантаж знищено!', canvas.width / 2, canvas.height / 2 - 10);
-        ctx.font = '14px sans-serif';
-        ctx.fillText('Натисни 🛵 або Пробіл', canvas.width / 2, canvas.height / 2 + 25);
+        ctx.font = '15px sans-serif';
+        ctx.fillStyle = '#2ecc71';
+        ctx.fillText('Торкнись екрана для рестарту', canvas.width / 2, canvas.height / 2 + 30);
       }
     }
 
@@ -205,13 +204,12 @@
         return;
       }
 
-      if (controlsState.gas) {
-        if (player.speed < player.maxSpeed) player.speed += 0.2 * timeFactor;
-      } else {
-        if (player.speed > 0) player.speed -= 0.1 * timeFactor;
-        if (player.speed < 0) player.speed = 0;
+      // Авто-газ: скутер завжди набирає швидкість
+      if (player.speed < player.maxSpeed) {
+        player.speed += 0.15 * timeFactor;
       }
 
+      // Повороти
       if (controlsState.left && player.x > 15) {
         player.x -= player.steerSpeed * timeFactor;
       }
@@ -224,7 +222,7 @@
       if (player.speed > 0) {
         money += player.speed * 0.05 * timeFactor;
         spawnTimer += player.speed * timeFactor;
-        if (spawnTimer > 160) {
+        if (spawnTimer > 150) {
           spawnObstacle();
           spawnTimer = 0;
         }
@@ -277,47 +275,64 @@
       }
     }
 
-    const btnLeft = document.getElementById('btnLeft');
-    const btnRight = document.getElementById('btnRight');
-    const btnGas = document.getElementById('btnGas');
+    // Обробка доторків до лівої/правої половини екрана
+    function handleTouch(e) {
+      if (gameOver) return;
+      controlsState.left = false;
+      controlsState.right = false;
 
-    const bindControl = (btn, action) => {
-      btn.addEventListener('touchstart', (e) => { e.preventDefault(); controlsState[action] = true; triggerHaptic(); });
-      btn.addEventListener('touchend', (e) => { e.preventDefault(); controlsState[action] = false; });
-      btn.addEventListener('mousedown', () => { controlsState[action] = true; });
-      btn.addEventListener('mouseup', () => { controlsState[action] = false; });
-      btn.addEventListener('mouseleave', () => { controlsState[action] = false; });
-    };
+      for (let i = 0; i < e.touches.length; i++) {
+        let x = e.touches[i].clientX;
+        if (x < window.innerWidth / 2) {
+          controlsState.left = true;
+        } else {
+          controlsState.right = true;
+        }
+      }
+    }
 
-    bindControl(btnLeft, 'left');
-    bindControl(btnRight, 'right');
-
-    btnGas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (gameOver) restartGame();
-      else controlsState.gas = true;
+    window.addEventListener('touchstart', (e) => {
+      if (gameOver) {
+        restartGame();
+        return;
+      }
+      handleTouch(e);
       triggerHaptic();
     });
-    btnGas.addEventListener('touchend', (e) => { e.preventDefault(); controlsState.gas = false; });
-    btnGas.addEventListener('mousedown', () => {
-      if (gameOver) restartGame();
-      else controlsState.gas = true;
-    });
-    btnGas.addEventListener('mouseup', () => { controlsState.gas = false; });
 
+    window.addEventListener('touchmove', handleTouch);
+
+    window.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        controlsState.left = false;
+        controlsState.right = false;
+      } else {
+        handleTouch(e);
+      }
+    });
+
+    // Миша для ПК
+    window.addEventListener('mousedown', (e) => {
+      if (gameOver) { restartGame(); return; }
+      if (e.clientX < window.innerWidth / 2) controlsState.left = true;
+      else controlsState.right = true;
+    });
+
+    window.addEventListener('mouseup', () => {
+      controlsState.left = false;
+      controlsState.right = false;
+    });
+
+    // Клавіатура для ПК
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') controlsState.left = true;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') controlsState.right = true;
-      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') {
-        if (gameOver) restartGame();
-        else controlsState.gas = true;
-      }
+      if (gameOver && (e.key === ' ' || e.key === 'Enter')) restartGame();
     });
 
     window.addEventListener('keyup', (e) => {
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') controlsState.left = false;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') controlsState.right = false;
-      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') controlsState.gas = false;
     });
 
     requestAnimationFrame(update);
