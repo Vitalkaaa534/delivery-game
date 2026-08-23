@@ -113,16 +113,18 @@
       width: 30,
       height: 50,
       speed: 0,
-      maxSpeed: 8
+      maxSpeed: 8,
+      steerSpeed: 4.5
     };
 
     let roadOffsetY = 0;
-    let isAccelerating = false;
     let money = 0;
     let hp = 100;
     let obstacles = [];
     let spawnTimer = 0;
     let gameOver = false;
+
+    let controlsState = { left: false, right: false, gas: false };
 
     function spawnObstacle() {
       const size = 30 + Math.random() * 15;
@@ -188,25 +190,40 @@
       }
     }
 
-    function update() {
+    let lastTime = performance.now();
+
+    function update(now) {
+      let dt = (now - lastTime) / 1000;
+      if (!dt || dt > 0.1) dt = 0.016;
+      lastTime = now;
+
+      let timeFactor = dt * 60;
+
       if (gameOver) {
         draw();
         requestAnimationFrame(update);
         return;
       }
 
-      if (isAccelerating) {
-        if (player.speed < player.maxSpeed) player.speed += 0.2;
+      if (controlsState.gas) {
+        if (player.speed < player.maxSpeed) player.speed += 0.2 * timeFactor;
       } else {
-        if (player.speed > 0) player.speed -= 0.1;
+        if (player.speed > 0) player.speed -= 0.1 * timeFactor;
         if (player.speed < 0) player.speed = 0;
       }
 
-      roadOffsetY += player.speed;
+      if (controlsState.left && player.x > 15) {
+        player.x -= player.steerSpeed * timeFactor;
+      }
+      if (controlsState.right && player.x < canvas.width - player.width - 15) {
+        player.x += player.steerSpeed * timeFactor;
+      }
+
+      roadOffsetY += player.speed * timeFactor;
 
       if (player.speed > 0) {
-        money += player.speed * 0.05;
-        spawnTimer += player.speed;
+        money += player.speed * 0.05 * timeFactor;
+        spawnTimer += player.speed * timeFactor;
         if (spawnTimer > 160) {
           spawnObstacle();
           spawnTimer = 0;
@@ -215,7 +232,7 @@
 
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
-        obs.y += player.speed;
+        obs.y += player.speed * timeFactor;
 
         if (checkCollision(player, obs)) {
           hp -= obs.type === 'car' ? 25 : 15;
@@ -254,64 +271,56 @@
       gameOver = false;
     }
 
-    function moveLeft() {
-      if (!gameOver && player.x > 15) player.x -= 25;
-      triggerHaptic();
-    }
-
-    function moveRight() {
-      if (!gameOver && player.x < canvas.width - player.width - 15) player.x += 25;
-      triggerHaptic();
-    }
-
-    function startGas() {
-      if (gameOver) {
-        restartGame();
-      } else {
-        isAccelerating = true;
-      }
-      triggerHaptic();
-    }
-
-    function stopGas() {
-      isAccelerating = false;
-    }
-
     function triggerHaptic() {
       if (tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
       }
     }
 
-    // Події сенсора та миші
     const btnLeft = document.getElementById('btnLeft');
     const btnRight = document.getElementById('btnRight');
     const btnGas = document.getElementById('btnGas');
 
-    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); moveLeft(); });
-    btnLeft.addEventListener('mousedown', moveLeft);
+    const bindControl = (btn, action) => {
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); controlsState[action] = true; triggerHaptic(); });
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); controlsState[action] = false; });
+      btn.addEventListener('mousedown', () => { controlsState[action] = true; });
+      btn.addEventListener('mouseup', () => { controlsState[action] = false; });
+      btn.addEventListener('mouseleave', () => { controlsState[action] = false; });
+    };
 
-    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); moveRight(); });
-    btnRight.addEventListener('mousedown', moveRight);
+    bindControl(btnLeft, 'left');
+    bindControl(btnRight, 'right');
 
-    btnGas.addEventListener('touchstart', (e) => { e.preventDefault(); startGas(); });
-    btnGas.addEventListener('mousedown', startGas);
+    btnGas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (gameOver) restartGame();
+      else controlsState.gas = true;
+      triggerHaptic();
+    });
+    btnGas.addEventListener('touchend', (e) => { e.preventDefault(); controlsState.gas = false; });
+    btnGas.addEventListener('mousedown', () => {
+      if (gameOver) restartGame();
+      else controlsState.gas = true;
+    });
+    btnGas.addEventListener('mouseup', () => { controlsState.gas = false; });
 
-    btnGas.addEventListener('touchend', (e) => { e.preventDefault(); stopGas(); });
-    btnGas.addEventListener('mouseup', stopGas);
-
-    // Події клавіатури (для ноутбука/ПК)
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') moveLeft();
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') moveRight();
-      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') startGas();
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') controlsState.left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') controlsState.right = true;
+      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') {
+        if (gameOver) restartGame();
+        else controlsState.gas = true;
+      }
     });
 
     window.addEventListener('keyup', (e) => {
-      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') stopGas();
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') controlsState.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') controlsState.right = false;
+      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') controlsState.gas = false;
     });
 
-    update();
+    requestAnimationFrame(update);
   </script>
 </body>
 </html>
