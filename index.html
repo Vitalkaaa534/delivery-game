@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Delivery Simulator - City Edition</title>
+  <title>Courier Delivery Pro</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --ui-bg: rgba(22, 27, 34, 0.88);
-      --ui-border: rgba(255, 255, 255, 0.12);
-      --accent-green: #22c55e;
-      --accent-blue: #2563eb;
-      --accent-yellow: #eab308;
+      --bg-dark: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-green: #10b981;
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
     }
 
     * {
@@ -24,9 +26,9 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #0d1117;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -39,9 +41,8 @@
       width: 100%;
       max-width: 440px;
       height: 100vh;
-      background: #87ceeb;
+      background: #1e293b;
       overflow: hidden;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5);
     }
 
     #gameCanvas {
@@ -50,380 +51,230 @@
       display: block;
     }
 
-    /* TOP HUD BAR */
-    .top-bar {
+    /* TOP HUD */
+    .hud-top {
       position: absolute;
-      top: env(safe-area-inset-top, 10px);
-      left: 10px;
-      right: 10px;
+      top: calc(env(safe-area-inset-top, 10px) + 5px);
+      left: 12px;
+      right: 12px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      z-index: 20;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
     }
 
-    .profile-card {
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--ui-border);
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .courier-info {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
       border-radius: 20px;
-      padding: 4px 10px 4px 4px;
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-
-    .avatar {
-      width: 34px;
-      height: 34px;
-      background: #15803d;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      border: 2px solid #22c55e;
-    }
-
-    .profile-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .profile-name {
-      font-size: 10px;
-      color: #9ca3af;
-      font-weight: 600;
-    }
-
-    .profile-level {
-      font-size: 12px;
       font-weight: 700;
-      color: #fff;
+      font-size: 13px;
     }
 
-    .xp-bar {
-      width: 60px;
-      height: 4px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 2px;
-      margin-top: 2px;
-      overflow: hidden;
-    }
-
-    .xp-fill {
-      width: 55%;
-      height: 100%;
-      background: var(--accent-green);
-    }
-
-    .stat-pill {
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--ui-border);
-      border-radius: 16px;
-      padding: 6px 10px;
+    .stats-group {
       display: flex;
-      align-items: center;
       gap: 6px;
-      font-weight: 800;
+    }
+
+    .stat-badge {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 20px;
       font-size: 13px;
-    }
-
-    .btn-plus {
-      width: 16px;
-      height: 16px;
-      background: var(--accent-green);
-      border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      margin-left: 2px;
-    }
-
-    .icon-btn {
-      width: 36px;
-      height: 36px;
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--ui-border);
-      border-radius: 12px;
+      font-weight: 800;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 16px;
+      gap: 4px;
     }
 
-    /* QUEST CARD */
-    .quest-card {
-      position: absolute;
-      top: calc(env(safe-area-inset-top, 10px) + 52px);
-      left: 10px;
-      right: 10px;
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--ui-border);
-      border-radius: 18px;
-      padding: 10px 14px;
+    /* MISSION PANEL */
+    .mission-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--accent-yellow);
+      border-radius: 14px;
+      padding: 8px 12px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      z-index: 20;
-    }
-
-    .quest-left {
-      display: flex;
       align-items: center;
-      gap: 10px;
+      transition: border-color 0.3s;
     }
 
-    .quest-box-icon {
-      font-size: 26px;
+    .mission-card.delivering {
+      border-left-color: var(--accent-green);
     }
 
-    .quest-title {
+    .mission-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+
+    .mission-desc {
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 700;
+      color: #ffffff;
     }
 
-    .quest-sub {
-      font-size: 10px;
-      color: #9ca3af;
-    }
-
-    .quest-reward {
+    .mission-reward {
       text-align: right;
-    }
-
-    .reward-val {
-      color: var(--accent-green);
       font-weight: 800;
+      color: var(--accent-green);
       font-size: 14px;
     }
 
-    .reward-dist {
-      font-size: 10px;
-      color: #9ca3af;
-    }
-
-    /* SIDE BUTTONS */
-    .side-menu {
+    /* CONTROLS OVERLAY */
+    .controls-layer {
       position: absolute;
-      left: 10px;
-      bottom: 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 20;
-    }
-
-    .side-btn {
-      width: 42px;
-      height: 42px;
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--ui-border);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      position: relative;
-    }
-
-    .badge {
-      position: absolute;
-      top: -3px;
-      right: -3px;
-      background: #ef4444;
-      color: white;
-      font-size: 9px;
-      font-weight: 800;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* BOTTOM CONTROLS & TIMER */
-    .bottom-ui {
-      position: absolute;
-      bottom: env(safe-area-inset-bottom, 15px);
-      left: 10px;
-      right: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      z-index: 20;
-    }
-
-    .timer-card {
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--ui-border);
-      border-radius: 20px;
-      padding: 6px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 180px;
-    }
-
-    .timer-label {
-      font-size: 9px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .timer-val {
-      font-size: 18px;
-      font-weight: 900;
-      font-family: monospace;
-      color: #fff;
-    }
-
-    .controls-row {
-      width: 100%;
+      bottom: calc(env(safe-area-inset-bottom, 15px) + 10px);
+      left: 12px;
+      right: 12px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 0 10px;
+      align-items: flex-end;
+      z-index: 10;
+      pointer-events: none;
     }
 
-    .steering-group {
+    .control-group {
       display: flex;
-      gap: 12px;
+      gap: 10px;
+      pointer-events: auto;
     }
 
-    .btn-ctrl {
-      width: 58px;
-      height: 58px;
-      background: rgba(30, 41, 59, 0.85);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+    .btn-touch {
+      width: 62px;
+      height: 62px;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid var(--card-border);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 22px;
       color: white;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      transition: transform 0.1s, background 0.1s;
     }
 
-    .btn-ctrl:active {
-      transform: scale(0.92);
-      background: rgba(37, 99, 235, 0.8);
+    .btn-touch:active, .btn-touch.active {
+      transform: scale(0.90);
+      background: rgba(59, 130, 246, 0.4);
+      border-color: var(--accent-blue);
     }
 
-    /* GAME OVER OVERLAY */
-    .game-over-screen {
+    .btn-gas {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+    .btn-gas:active, .btn-gas.active {
+      background: rgba(16, 185, 129, 0.6);
+    }
+
+    .btn-brake {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+    .btn-brake:active, .btn-brake.active {
+      background: rgba(239, 68, 68, 0.6);
+    }
+
+    /* NOTIFICATION TOAST */
+    .toast {
       position: absolute;
-      inset: 0;
-      background: rgba(13, 17, 23, 0.9);
-      backdrop-filter: blur(12px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent-green);
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--accent-green);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
+      transition: all 0.3s ease;
+      z-index: 30;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    .game-over-screen.active {
+    .toast.show {
       opacity: 1;
-      pointer-events: auto;
-    }
-
-    .go-btn {
-      margin-top: 15px;
-      padding: 12px 28px;
-      background: var(--accent-green);
-      border: none;
-      border-radius: 14px;
-      color: white;
-      font-weight: 800;
-      font-size: 15px;
+      transform: translate(-50%, -50%) scale(1);
     }
   </style>
 </head>
 <body>
 
   <div class="game-container" id="app">
-    <!-- TOP BAR -->
-    <div class="top-bar">
-      <div class="profile-card">
-        <div class="avatar">🛵</div>
-        <div class="profile-info">
-          <div class="profile-name">Кур'єр новачок</div>
-          <div class="profile-level">Рівень 3</div>
-          <div class="xp-bar"><div class="xp-fill"></div></div>
+    <!-- TOP HUD -->
+    <div class="hud-top">
+      <div class="status-bar">
+        <div class="courier-info">
+          <span>🛵</span>
+          <span>Кур'єр #1</span>
+        </div>
+        <div class="stats-group">
+          <div class="stat-badge" style="color: var(--accent-green);">
+            💵 <span id="moneyText">0 ₴</span>
+          </div>
+          <div class="stat-badge" style="color: var(--accent-yellow);">
+            ⭐ <span id="ratingText">5.0</span>
+          </div>
         </div>
       </div>
 
-      <div class="stat-pill">
-        💵 <span id="money">12 560 ₴</span> <span class="btn-plus">+</span>
-      </div>
-
-      <div class="stat-pill">
-        ⚡ <span>8/10</span> <span class="btn-plus">+</span>
-      </div>
-
-      <div class="icon-btn">☰</div>
-    </div>
-
-    <!-- QUEST CARD -->
-    <div class="quest-card">
-      <div class="quest-left">
-        <div class="quest-box-icon">📦</div>
+      <!-- MISSION CARD -->
+      <div class="mission-card" id="missionCard">
         <div>
-          <div class="quest-title">Доставка №137</div>
-          <div class="quest-sub">Забери замовлення і достав до клієнта</div>
+          <div class="mission-title" id="mStatus">Крок 1: Забери замовлення</div>
+          <div class="mission-desc" id="mTarget">Піцерія "Puzata Hata"</div>
+        </div>
+        <div class="mission-reward">
+          <div id="mReward">+180 ₴</div>
+          <div style="font-size:10px; color:#94a3b8;" id="mDist">0 м</div>
         </div>
       </div>
-      <div class="quest-reward">
-        <div class="reward-val">250 ₴</div>
-        <div class="reward-dist" id="distText">1.2 км</div>
-      </div>
     </div>
 
-    <!-- SIDE MENU -->
-    <div class="side-menu">
-      <div class="side-btn">💬 <div class="badge">2</div></div>
-      <div class="side-btn">🏆</div>
-      <div class="side-btn">⚙️</div>
-    </div>
-
+    <!-- CANVAS GAME ENGINE -->
     <canvas id="gameCanvas"></canvas>
 
-    <!-- BOTTOM UI -->
-    <div class="bottom-ui">
-      <div class="timer-card">
-        <div class="timer-label">Час доставки</div>
-        <div class="timer-val" id="timer">08:45</div>
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toast">Замовлення забрано! 📦</div>
+
+    <!-- CONTROLS -->
+    <div class="controls-layer">
+      <!-- ЛІВО: КЕРУВАННЯ НАПРЯМКОМ -->
+      <div class="control-group">
+        <div class="btn-touch" id="btnLeft">⬅️</div>
+        <div class="btn-touch" id="btnRight">➡️</div>
       </div>
 
-      <!-- ЗМІНЕНА ПАНЕЛЬ КЕРУВАННЯ: СТРІЛКИ ЛІВОРУЧ, ГАЗ ПРАВОРУЧ -->
-      <div class="controls-row">
-        <div class="steering-group">
-          <div class="btn-ctrl" id="btnLeft">⬅️</div>
-          <div class="btn-ctrl" id="btnRight">➡️</div>
-        </div>
-        <div class="btn-ctrl" id="btnGas" style="width:68px; height:68px; background:var(--accent-green);">⬆️</div>
+      <!-- ПРАВО: ГАЗ ТА ГАЛЬМО -->
+      <div class="control-group">
+        <div class="btn-touch btn-brake" id="btnBrake">🛑</div>
+        <div class="btn-touch btn-gas" id="btnGas">⚡</div>
       </div>
-    </div>
-
-    <!-- GAME OVER SCREEN -->
-    <div class="game-over-screen" id="gameOver">
-      <h2 style="font-size:26px; margin-bottom:5px;">📦 Аварія!</h2>
-      <p style="color:#9ca3af; margin-bottom:15px;">Вантаж пошкоджено під час доставки</p>
-      <button class="go-btn" id="restartBtn">Спробувати знову</button>
     </div>
   </div>
 
@@ -441,294 +292,349 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // 3D Перспектива & Камера
-    let horizonY = 0;
-    let bottomY = 0;
-    const FOV = 160;
-    const Z_FAR = 700;
+    // ==========================================
+    // СТАН ГРИ ТА САТИСТИКА
+    // ==========================================
+    let money = 0;
+    let rating = 5.0;
 
-    function updateCamera() {
-      horizonY = canvas.height * 0.35;
-      bottomY = canvas.height - 40;
+    // Скутер (Гравець)
+    const player = {
+      x: 1200,
+      y: 1200,
+      angle: 0,
+      speed: 0,
+      maxSpeed: 7,
+      accel: 0.15,
+      friction: 0.96,
+      turnSpeed: 0.045,
+      width: 24,
+      height: 42
+    };
+
+    // Клавіші керування
+    const keys = { left: false, right: false, gas: false, brake: false };
+
+    // ==========================================
+    // КАРТА ТА ГЕНЕРАЦІЯ МІСТА
+    // ==========================================
+    const WORLD_SIZE = 3000;
+    const BLOCK_SIZE = 350;
+    const ROAD_WIDTH = 120;
+
+    const buildings = [];
+    const obstacles = [];
+
+    function generateCity() {
+      for (let x = 200; x < WORLD_SIZE - 200; x += BLOCK_SIZE + ROAD_WIDTH) {
+        for (let y = 200; y < WORLD_SIZE - 200; y += BLOCK_SIZE + ROAD_WIDTH) {
+          // Квартал будинків
+          buildings.push({
+            x: x,
+            y: y,
+            w: BLOCK_SIZE,
+            h: BLOCK_SIZE,
+            color: '#334155',
+            roofColor: '#1e293b'
+          });
+
+          // Припарковане авто або баки як перешкоди
+          if (Math.random() > 0.4) {
+            obstacles.push({
+              x: x + BLOCK_SIZE + 20,
+              y: y + Math.random() * BLOCK_SIZE,
+              w: 30,
+              h: 50,
+              color: ['#ef4444', '#3b82f6', '#f59e0b', '#64748b'][Math.floor(Math.random() * 4)]
+            });
+          }
+        }
+      }
     }
+    generateCity();
 
-    function project(x, z) {
-      let scale = FOV / (z + FOV);
-      return {
-        x: canvas.width / 2 + x * scale,
-        y: horizonY + (bottomY - horizonY) * scale,
-        scale: scale
+    // ==========================================
+    // СИСТЕМА ЗАМОВЛЕНЬ (QUEST SYSTEM)
+    // ==========================================
+    const deliveryState = {
+      phase: 'PICKUP', // 'PICKUP' або 'DELIVER'
+      pickupPoint: { x: 800, y: 1400, radius: 45, name: 'Піцерія "Puzata Hata"' },
+      dropoffPoint: { x: 2200, y: 800, radius: 45, name: 'вул. Шевченка, 45' },
+      reward: 180
+    };
+
+    function spawnNextOrder() {
+      // Нова випадкова точка на дорозі
+      let randX = 300 + Math.floor(Math.random() * 5) * (BLOCK_SIZE + ROAD_WIDTH) - ROAD_WIDTH / 2;
+      let randY = 300 + Math.floor(Math.random() * 5) * (BLOCK_SIZE + ROAD_WIDTH) - ROAD_WIDTH / 2;
+
+      deliveryState.pickupPoint = {
+        x: randX,
+        y: randY,
+        radius: 45,
+        name: ['Суші Бар "Oishi"', 'Бургерна "Craft"', 'Кав\'ярня "Lviv Coffee"', 'Пекарня "Галицька"'][Math.floor(Math.random() * 4)]
       };
+
+      let dropX = 300 + Math.floor(Math.random() * 5) * (BLOCK_SIZE + ROAD_WIDTH) - ROAD_WIDTH / 2;
+      let dropY = 300 + Math.floor(Math.random() * 5) * (BLOCK_SIZE + ROAD_WIDTH) - ROAD_WIDTH / 2;
+
+      deliveryState.dropoffPoint = {
+        x: dropX,
+        y: dropY,
+        radius: 45,
+        name: `вул. Франка, ${Math.floor(Math.random() * 90 + 1)}`
+      };
+
+      deliveryState.reward = Math.floor(120 + Math.random() * 150);
+      deliveryState.phase = 'PICKUP';
+
+      updateMissionUI();
     }
 
-    // Стан гри
-    let player = { x: 0, targetX: 0, z: 25, speed: 0, maxSpeed: 4.5 };
-    let distanceLeft = 1200;
-    let isAccelerating = false;
-    let roadScroll = 0;
-    let gameOver = false;
+    function updateMissionUI() {
+      const card = document.getElementById('missionCard');
+      const mStatus = document.getElementById('mStatus');
+      const mTarget = document.getElementById('mTarget');
+      const mReward = document.getElementById('mReward');
 
-    // Генерація міських будинків
-    let buildings = [];
-    for (let i = 0; i < 20; i++) {
-      buildings.push({
-        z: i * 40,
-        side: i % 2 === 0 ? -1 : 1,
-        height: 60 + Math.random() * 80,
-        width: 70 + Math.random() * 30,
-        color: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#fdba74', '#fde047'][Math.floor(Math.random() * 5)]
+      if (deliveryState.phase === 'PICKUP') {
+        card.classList.remove('delivering');
+        mStatus.innerText = 'Крок 1: Забери замовлення';
+        mTarget.innerText = deliveryState.pickupPoint.name;
+      } else {
+        card.classList.add('delivering');
+        mStatus.innerText = 'Крок 2: Доставити клієнту';
+        mTarget.innerText = deliveryState.dropoffPoint.name;
+      }
+      mReward.innerText = `+${deliveryState.reward} ₴`;
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.innerText = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ==========================================
+    // ЛОГІКА ОПРАЦЮВАННЯ ТА КАЗА
+    // ==========================================
+    function setupControls() {
+      const bindBtn = (id, keyName) => {
+        const btn = document.getElementById(id);
+        const start = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
+        const end = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
+
+        btn.addEventListener('touchstart', start);
+        btn.addEventListener('touchend', end);
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', end);
+      };
+
+      bindBtn('btnLeft', 'left');
+      bindBtn('btnRight', 'right');
+      bindBtn('btnGas', 'gas');
+      bindBtn('btnBrake', 'brake');
+
+      // Клавіатура для ПК
+      window.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+        if (e.key === 'ArrowUp' || e.key === 'w') keys.gas = true;
+        if (e.key === 'ArrowDown' || e.key === 's') keys.brake = true;
+      });
+      window.addEventListener('keyup', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+        if (e.key === 'ArrowUp' || e.key === 'w') keys.gas = false;
+        if (e.key === 'ArrowDown' || e.key === 's') keys.brake = false;
       });
     }
+    setupControls();
 
-    let obstacles = [];
-    function spawnObstacle() {
-      obstacles.push({
-        x: (Math.random() - 0.5) * 160,
-        z: Z_FAR,
-        color: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'][Math.floor(Math.random() * 4)]
+    // ==========================================
+    // ФІЗИКА ТА ОНОВЛЕННЯ СТАНУ
+    // ==========================================
+    function updatePhysics() {
+      // Газ / Гальмо
+      if (keys.gas) {
+        player.speed = Math.min(player.speed + player.accel, player.maxSpeed);
+      } else if (keys.brake) {
+        player.speed = Math.max(player.speed - player.accel * 1.5, -player.maxSpeed * 0.4);
+      } else {
+        player.speed *= player.friction;
+      }
+
+      // Поворот керма (працює при русі)
+      if (Math.abs(player.speed) > 0.1) {
+        const dir = player.speed > 0 ? 1 : -1;
+        if (keys.left) player.angle -= player.turnSpeed * dir;
+        if (keys.right) player.angle += player.turnSpeed * dir;
+      }
+
+      // Нові координати
+      let nextX = player.x + Math.sin(player.angle) * player.speed;
+      let nextY = player.y - Math.cos(player.angle) * player.speed;
+
+      // Зіткнення з будинками
+      let collided = false;
+      buildings.forEach(b => {
+        if (nextX > b.x - 12 && nextX < b.x + b.w + 12 &&
+            nextY > b.y - 12 && nextY < b.y + b.h + 12) {
+          collided = true;
+        }
       });
-    }
 
-    function drawSky() {
-      updateCamera();
-      let grad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      grad.addColorStop(0, '#38bdf8');
-      grad.addColorStop(1, '#bae6fd');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, horizonY);
+      // Перешкоди
+      obstacles.forEach(o => {
+        if (nextX > o.x - 10 && nextX < o.x + o.w + 10 &&
+            nextY > o.y - 10 && nextY < o.y + o.h + 10) {
+          collided = true;
+        }
+      });
 
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(canvas.width * 0.8, horizonY * 0.3, 22, 0, Math.PI * 2);
-      ctx.fill();
-    }
+      if (!collided) {
+        player.x = nextX;
+        player.y = nextY;
+      } else {
+        player.speed = -player.speed * 0.4; // Відскок при ударі
+      }
 
-    function drawEnvironment() {
-      ctx.fillStyle = '#4ade80';
-      ctx.fillRect(0, horizonY, canvas.width, canvas.height - horizonY);
+      // Перевірка зон замовлення
+      let activeTarget = deliveryState.phase === 'PICKUP' ? deliveryState.pickupPoint : deliveryState.dropoffPoint;
+      let dist = Math.hypot(player.x - activeTarget.x, player.y - activeTarget.y);
 
-      const ROAD_W = 190;
-      const SEGMENTS = 30;
-      const segZ = Z_FAR / SEGMENTS;
+      document.getElementById('mDist').innerText = `${Math.round(dist)} м`;
 
-      for (let i = SEGMENTS - 1; i >= 0; i--) {
-        let z1 = i * segZ;
-        let z2 = (i + 1) * segZ;
-
-        let p1 = project(0, z1);
-        let p2 = project(0, z2);
-
-        let w1 = ROAD_W * p1.scale;
-        let w2 = ROAD_W * p2.scale;
-
-        let sw1 = (ROAD_W + 40) * p1.scale;
-        let sw2 = (ROAD_W + 40) * p2.scale;
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.beginPath();
-        ctx.moveTo(p1.x - sw1, p1.y);
-        ctx.lineTo(p1.x + sw1, p1.y);
-        ctx.lineTo(p2.x + sw2, p2.y);
-        ctx.lineTo(p2.x - sw2, p2.y);
-        ctx.fill();
-
-        ctx.fillStyle = '#475569';
-        ctx.beginPath();
-        ctx.moveTo(p1.x - w1, p1.y);
-        ctx.lineTo(p1.x + w1, p1.y);
-        ctx.lineTo(p2.x + w2, p2.y);
-        ctx.lineTo(p2.x - w2, p2.y);
-        ctx.fill();
-
-        let gpsW1 = 18 * p1.scale;
-        let gpsW2 = 18 * p2.scale;
-        ctx.fillStyle = 'rgba(37, 99, 235, 0.85)';
-        ctx.beginPath();
-        ctx.moveTo(p1.x - gpsW1, p1.y);
-        ctx.lineTo(p1.x + gpsW1, p1.y);
-        ctx.lineTo(p2.x + gpsW2, p2.y);
-        ctx.lineTo(p2.x - gpsW2, p2.y);
-        ctx.fill();
-
-        if (Math.floor((z1 + roadScroll * 4) / 40) % 2 === 0) {
-          let dash1 = 4 * p1.scale;
-          let dash2 = 4 * p2.scale;
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.moveTo(p1.x - dash1, p1.y);
-          ctx.lineTo(p1.x + dash1, p1.y);
-          ctx.lineTo(p2.x + dash2, p2.y);
-          ctx.lineTo(p2.x - dash2, p2.y);
-          ctx.fill();
+      if (dist < activeTarget.radius) {
+        if (deliveryState.phase === 'PICKUP') {
+          deliveryState.phase = 'DELIVER';
+          showToast('Вантаж забрано! 📦 Їдь до клієнта');
+          updateMissionUI();
+        } else {
+          money += deliveryState.reward;
+          document.getElementById('moneyText').innerText = `${money} ₴`;
+          showToast(`Доставка успішна! +${deliveryState.reward} ₴ 🎉`);
+          spawnNextOrder();
         }
       }
     }
 
-    function drawBuildings() {
-      buildings.sort((a, b) => b.z - a.z);
-
-      buildings.forEach(b => {
-        let roadOffset = b.side * 140;
-        let p = project(roadOffset, b.z);
-
-        let bw = b.width * p.scale;
-        let bh = b.height * p.scale;
-
-        ctx.fillStyle = b.color;
-        ctx.fillRect(p.x - bw / 2, p.y - bh, bw, bh);
-
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(p.x - bw / 2, p.y - bh - (8 * p.scale), bw, 8 * p.scale);
-
-        ctx.fillStyle = '#fef08a';
-        for (let wx = -bw/3; wx <= bw/3; wx += 14 * p.scale) {
-          for (let wy = -bh + 10 * p.scale; wy < -10 * p.scale; wy += 18 * p.scale) {
-            ctx.fillRect(p.x + wx, p.y + wy, 6 * p.scale, 8 * p.scale);
-          }
-        }
-      });
-    }
-
-    function drawTargetPin() {
-      let p = project(0, 500);
-      let size = 30 * p.scale;
-
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y - size * 2, size, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(p.x - size, p.y - size * 2);
-      ctx.lineTo(p.x + size, p.y - size * 2);
-      ctx.lineTo(p.x, p.y);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y - size * 2, size * 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawPlayer() {
-      let p = project(player.x, player.z);
-      let s = p.scale * 1.2;
+    // ==========================================
+    // РЕНДЕР (МАЛЮВАННЯ ГРИ)
+    // ==========================================
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       ctx.save();
-      ctx.translate(p.x, p.y);
+      // Центруємо камеру на скутері
+      ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
 
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      // 1. Зелені газони (Фон)
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+
+      // 2. Дороги
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+
+      // 3. Будинки та тротуари
+      buildings.forEach(b => {
+        // Тротуар
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(b.x - 15, b.y - 15, b.w + 30, b.h + 30);
+
+        // Будинок
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+
+        // Дах
+        ctx.fillStyle = b.roofColor;
+        ctx.fillRect(b.x + 10, b.y + 10, b.w - 20, b.h - 20);
+      });
+
+      // 4. Перешкоди (Авто)
+      obstacles.forEach(o => {
+        ctx.fillStyle = o.color;
+        ctx.beginPath();
+        ctx.roundRect(o.x, o.y, o.w, o.h, 6);
+        ctx.fill();
+      });
+
+      // 5. Точки цілей (Ресторан / Клієнт)
+      let target = deliveryState.phase === 'PICKUP' ? deliveryState.pickupPoint : deliveryState.dropoffPoint;
+      let targetColor = deliveryState.phase === 'PICKUP' ? '#f59e0b' : '#10b981';
+
+      ctx.strokeStyle = targetColor;
+      ctx.fillStyle = targetColor + '33';
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 20 * s, 8 * s, 0, 0, Math.PI * 2);
+      ctx.arc(target.x, target.y, target.radius + Math.sin(Date.now() / 200) * 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = targetColor;
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(deliveryState.phase === 'PICKUP' ? '📦' : '🏁', target.x, target.y + 7);
+
+      // 6. Скутер (Гравець)
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle);
+
+      // Тінь скутера
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(-player.width / 2 + 3, -player.height / 2 + 3, player.width, player.height);
+
+      // Корпус скутера
+      ctx.fillStyle = '#3b82f6'; // Синій корпус
+      ctx.beginPath();
+      ctx.roundRect(-player.width / 2, -player.height / 2, player.width, player.height, 8);
       ctx.fill();
 
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(-6 * s, -14 * s, 12 * s, 16 * s);
+      // Термосумка доставки на багажнику
+      ctx.fillStyle = '#10b981'; // Зелена сумка
+      ctx.fillRect(-player.width / 2 + 2, player.height / 2 - 14, player.width - 4, 12);
 
-      ctx.fillStyle = '#22c55e';
+      // Фара
+      ctx.fillStyle = '#fef08a';
       ctx.beginPath();
-      ctx.roundRect(-16 * s, -45 * s, 32 * s, 26 * s, 5 * s);
+      ctx.arc(0, -player.height / 2, 5, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#166534';
+      ctx.restore();
+
+      // 7. Динамічна GPS-Стрілка вказівник
+      let angleToTarget = Math.atan2(target.y - player.y, target.x - player.x);
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(angleToTarget);
+
+      ctx.fillStyle = targetColor;
       ctx.beginPath();
-      ctx.arc(0, -52 * s, 10 * s, 0, Math.PI * 2);
+      ctx.moveTo(55, 0);
+      ctx.lineTo(40, -8);
+      ctx.lineTo(40, 8);
+      ctx.closePath();
       ctx.fill();
+      ctx.restore();
 
       ctx.restore();
     }
 
-    function drawObstacles() {
-      obstacles.forEach(obs => {
-        let p = project(obs.x, obs.z);
-        let w = 60 * p.scale;
-        let h = 45 * p.scale;
-
-        ctx.fillStyle = obs.color;
-        ctx.beginPath();
-        ctx.roundRect(p.x - w/2, p.y - h, w, h, 4 * p.scale);
-        ctx.fill();
-      });
+    // ==========================================
+    // ГОЛОВНИЙ ЦИКЛ ГРИ (GAME LOOP)
+    // ==========================================
+    function gameLoop() {
+      updatePhysics();
+      render();
+      requestAnimationFrame(gameLoop);
     }
 
-    let spawnTimer = 0;
-
-    function update() {
-      if (gameOver) return;
-
-      if (isAccelerating) {
-        if (player.speed < player.maxSpeed) player.speed += 0.04;
-      } else {
-        if (player.speed > 0) player.speed -= 0.02;
-        if (player.speed < 0) player.speed = 0;
-      }
-
-      player.x += (player.targetX - player.x) * 0.15;
-      roadScroll += player.speed;
-
-      buildings.forEach(b => {
-        b.z -= player.speed * 1.8;
-        if (b.z < 0) b.z = Z_FAR;
-      });
-
-      spawnTimer += player.speed;
-      if (spawnTimer > 180) {
-        spawnObstacle();
-        spawnTimer = 0;
-      }
-
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        let obs = obstacles[i];
-        obs.z -= player.speed * 2.2;
-
-        if (obs.z <= player.z + 10 && obs.z >= player.z - 10) {
-          if (Math.abs(obs.x - player.x) < 30) {
-            gameOver = true;
-            document.getElementById('gameOver').classList.add('active');
-          }
-        }
-        if (obs.z < 0) obstacles.splice(i, 1);
-      }
-
-      if (player.speed > 0 && distanceLeft > 0) {
-        distanceLeft -= player.speed * 0.1;
-        document.getElementById('distText').innerText = `${(distanceLeft / 1000).toFixed(1)} км`;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawSky();
-      drawEnvironment();
-      drawBuildings();
-      drawTargetPin();
-      drawObstacles();
-      drawPlayer();
-
-      requestAnimationFrame(update);
-    }
-
-    // Поворот ліворуч/праворуч (ліва рука)
-    document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); player.targetX = Math.max(-110, player.targetX - 40); });
-    document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); player.targetX = Math.min(110, player.targetX + 40); });
-    
-    // Газ (права рука)
-    const gasBtn = document.getElementById('btnGas');
-    gasBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isAccelerating = true; });
-    gasBtn.addEventListener('touchend', (e) => { e.preventDefault(); isAccelerating = false; });
-    gasBtn.addEventListener('mousedown', () => isAccelerating = true);
-    gasBtn.addEventListener('mouseup', () => isAccelerating = false);
-
-    document.getElementById('restartBtn').addEventListener('click', () => {
-      gameOver = false;
-      player.x = 0;
-      player.targetX = 0;
-      player.speed = 0;
-      distanceLeft = 1200;
-      obstacles = [];
-      document.getElementById('gameOver').classList.remove('active');
-      requestAnimationFrame(update);
-    });
-
-    requestAnimationFrame(update);
+    // Запуск
+    spawnNextOrder();
+    requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
