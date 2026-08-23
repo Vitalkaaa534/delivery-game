@@ -3,129 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Delivery Simulator 3D - Modern UI</title>
+  <title>Delivery Simulator - City Edition</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-dark: #070913;
-      --card-bg: rgba(15, 23, 42, 0.75);
-      --border-glow: rgba(255, 255, 255, 0.12);
-      --accent-green: #10b981;
-      --accent-yellow: #f59e0b;
-      --accent-red: #ef4444;
-      --accent-cyan: #06b6d4;
+      --ui-bg: rgba(22, 27, 34, 0.88);
+      --ui-border: rgba(255, 255, 255, 0.12);
+      --accent-green: #22c55e;
+      --accent-blue: #2563eb;
+      --accent-yellow: #eab308;
     }
 
     * {
       box-sizing: border-box;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
     body {
       margin: 0;
       padding: 0;
-      background-color: var(--bg-dark);
+      background-color: #0d1117;
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
       height: 100vh;
       overflow: hidden;
-      user-select: none;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
     }
 
-    .game-wrapper {
+    .game-container {
       position: relative;
       width: 100%;
       max-width: 440px;
       height: 100vh;
+      background: #87ceeb;
       overflow: hidden;
-      background: #020617;
-      box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    }
-
-    /* Floating Glass HUD */
-    .hud-container {
-      position: absolute;
-      top: env(safe-area-inset-top, 12px);
-      left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      z-index: 20;
-      pointer-events: none;
-    }
-
-    .hud-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--border-glow);
-      border-radius: 16px;
-      padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .hud-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #94a3b8;
-      font-weight: 700;
-    }
-
-    .hud-value {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 15px;
-      font-weight: 800;
-    }
-
-    .val-money { color: var(--accent-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-    .val-speed { color: var(--accent-yellow); text-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
-
-    /* HP Progress Bar */
-    .hp-wrapper {
-      flex: 1;
-      max-width: 140px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .hp-bar-outer {
-      width: 100%;
-      height: 10px;
-      background: rgba(15, 23, 42, 0.8);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hp-bar-inner {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
-      border-radius: 20px;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
-    }
-
-    .hp-bar-inner.critical {
-      animation: pulse-red 0.8s infinite alternate;
-    }
-
-    @keyframes pulse-red {
-      0% { opacity: 1; filter: drop-shadow(0 0 4px #ef4444); }
-      100% { opacity: 0.4; filter: drop-shadow(0 0 12px #ef4444); }
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
     }
 
     #gameCanvas {
@@ -134,233 +50,372 @@
       display: block;
     }
 
-    /* Bottom Steering Visualizer */
-    .touch-overlay {
+    /* TOP HUD BAR */
+    .top-bar {
       position: absolute;
-      bottom: env(safe-area-inset-bottom, 20px);
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      max-width: 280px;
-      height: 36px;
-      background: var(--card-bg);
+      top: env(safe-area-inset-top, 10px);
+      left: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .profile-card {
+      background: var(--ui-bg);
       backdrop-filter: blur(10px);
-      border: 1px solid var(--border-glow);
+      border: 1px solid var(--ui-border);
       border-radius: 20px;
+      padding: 4px 10px 4px 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      background: #15803d;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 20;
-      pointer-events: none;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      font-size: 18px;
+      border: 2px solid #22c55e;
     }
 
-    .touch-track {
-      width: 90%;
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-name {
+      font-size: 10px;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+
+    .profile-level {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .xp-bar {
+      width: 60px;
       height: 4px;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.2);
       border-radius: 2px;
+      margin-top: 2px;
+      overflow: hidden;
+    }
+
+    .xp-fill {
+      width: 55%;
+      height: 100%;
+      background: var(--accent-green);
+    }
+
+    .stat-pill {
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ui-border);
+      border-radius: 16px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .btn-plus {
+      width: 16px;
+      height: 16px;
+      background: var(--accent-green);
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      margin-left: 2px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ui-border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* QUEST CARD */
+    .quest-card {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 10px) + 52px);
+      left: 10px;
+      right: 10px;
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ui-border);
+      border-radius: 18px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+    }
+
+    .quest-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quest-box-icon {
+      font-size: 26px;
+    }
+
+    .quest-title {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .quest-sub {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .quest-reward {
+      text-align: right;
+    }
+
+    .reward-val {
+      color: var(--accent-green);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .reward-dist {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    /* SIDE BUTTONS */
+    .side-menu {
+      position: absolute;
+      left: 10px;
+      bottom: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    .side-btn {
+      width: 42px;
+      height: 42px;
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ui-border);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
       position: relative;
     }
 
-    .touch-handle {
+    .badge {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 24px;
-      height: 24px;
-      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      top: -3px;
+      right: -3px;
+      background: #ef4444;
+      color: white;
+      font-size: 9px;
+      font-weight: 800;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
-      box-shadow: 0 0 12px #06b6d4;
-      transition: left 0.05s ease-out;
-    }
-
-    /* Modal Dialog Game Over */
-    .modal-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(2, 6, 23, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+    }
+
+    /* BOTTOM CONTROLS & TIMER */
+    .bottom-ui {
+      position: absolute;
+      bottom: env(safe-area-inset-bottom, 15px);
+      left: 10px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    .timer-card {
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ui-border);
+      border-radius: 20px;
+      padding: 6px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 180px;
+    }
+
+    .timer-label {
+      font-size: 9px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .timer-val {
+      font-size: 18px;
+      font-weight: 900;
+      font-family: monospace;
+      color: #fff;
+    }
+
+    .controls-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+    }
+
+    .btn-ctrl {
+      width: 58px;
+      height: 58px;
+      background: rgba(30, 41, 59, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: white;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    }
+
+    .btn-ctrl:active {
+      transform: scale(0.92);
+      background: rgba(37, 99, 235, 0.8);
+    }
+
+    /* GAME OVER OVERLAY */
+    .game-over-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.9);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       z-index: 50;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s;
     }
 
-    .modal-overlay.active {
+    .game-over-screen.active {
       opacity: 1;
       pointer-events: auto;
     }
 
-    .modal-card {
-      width: 100%;
-      max-width: 320px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 28px;
-      padding: 28px 24px;
-      text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-      transform: scale(0.9);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .modal-overlay.active .modal-card {
-      transform: scale(1);
-    }
-
-    .modal-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-    }
-
-    .modal-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
-
-    .modal-subtitle {
-      font-size: 13px;
-      color: #94a3b8;
-      margin-bottom: 20px;
-    }
-
-    .stats-grid {
-      background: rgba(2, 6, 23, 0.5);
-      border-radius: 16px;
-      padding: 14px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .stat-value {
-      font-size: 18px;
-      font-weight: 800;
-      color: #38bdf8;
-    }
-
-    .stat-desc {
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 2px;
-    }
-
-    .btn-restart {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    .go-btn {
+      margin-top: 15px;
+      padding: 12px 28px;
+      background: var(--accent-green);
       border: none;
-      border-radius: 16px;
-      color: #ffffff;
+      border-radius: 14px;
+      color: white;
+      font-weight: 800;
       font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-
-    .btn-restart:active {
-      transform: scale(0.97);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    /* Damage Floating Text */
-    .damage-popup {
-      position: absolute;
-      color: #ef4444;
-      font-size: 18px;
-      font-weight: 900;
-      pointer-events: none;
-      animation: float-up 0.8s ease-out forwards;
-      text-shadow: 0 0 8px rgba(0,0,0,0.8);
-      z-index: 30;
-    }
-
-    @keyframes float-up {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
     }
   </style>
 </head>
 <body>
 
-  <div class="game-wrapper" id="gameWrapper">
-    <!-- Floating Cyber HUD -->
-    <div class="hud-container">
-      <div class="hud-card">
-        <span>💰</span>
-        <div>
-          <div class="hud-label">Зароблено</div>
-          <div class="hud-value val-money" id="money">0 ₴</div>
+  <div class="game-container" id="app">
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <div class="profile-card">
+        <div class="avatar">🛵</div>
+        <div class="profile-info">
+          <div class="profile-name">Кур'єр новачок</div>
+          <div class="profile-level">Рівень 3</div>
+          <div class="xp-bar"><div class="xp-fill"></div></div>
         </div>
       </div>
 
-      <div class="hud-card hp-wrapper">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span class="hud-label">Вантаж</span>
-          <span class="hud-label" id="hpText" style="color:#fff;">100%</span>
-        </div>
-        <div class="hp-bar-outer">
-          <div class="hp-bar-inner" id="hpFill"></div>
-        </div>
+      <div class="stat-pill">
+        💵 <span id="money">12 560 ₴</span> <span class="btn-plus">+</span>
       </div>
 
-      <div class="hud-card">
-        <span>⚡</span>
+      <div class="stat-pill">
+        ⚡ <span>8/10</span> <span class="btn-plus">+</span>
+      </div>
+
+      <div class="icon-btn">☰</div>
+    </div>
+
+    <!-- QUEST CARD -->
+    <div class="quest-card">
+      <div class="quest-left">
+        <div class="quest-box-icon">📦</div>
         <div>
-          <div class="hud-label">Швидкість</div>
-          <div class="hud-value val-speed" id="speed">0</div>
+          <div class="quest-title">Доставка №137</div>
+          <div class="quest-sub">Забери замовлення і достав до клієнта</div>
         </div>
       </div>
+      <div class="quest-reward">
+        <div class="reward-val">250 ₴</div>
+        <div class="reward-dist" id="distText">1.2 км</div>
+      </div>
+    </div>
+
+    <!-- SIDE MENU -->
+    <div class="side-menu">
+      <div class="side-btn">💬 <div class="badge">2</div></div>
+      <div class="side-btn">🏆</div>
+      <div class="side-btn">⚙️</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Steering Touch Bar Visualizer -->
-    <div class="touch-overlay">
-      <div class="touch-track">
-        <div class="touch-handle" id="touchHandle"></div>
+    <!-- BOTTOM UI -->
+    <div class="bottom-ui">
+      <div class="timer-card">
+        <div class="timer-label">Час доставки</div>
+        <div class="timer-val" id="timer">08:45</div>
+      </div>
+
+      <div class="controls-row">
+        <div class="btn-ctrl" id="btnLeft">⬅️</div>
+        <div class="btn-ctrl" id="btnGas" style="width:68px; height:68px; background:var(--accent-green);">⬆️</div>
+        <div class="btn-ctrl" id="btnRight">➡️</div>
       </div>
     </div>
 
-    <!-- Game Over Modal -->
-    <div class="modal-overlay" id="gameOverModal">
-      <div class="modal-card">
-        <div class="modal-icon">📦💥</div>
-        <div class="modal-title">Вантаж пошкоджено!</div>
-        <div class="modal-subtitle">Кур'єр не впорався з керуванням</div>
-
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value" id="finalMoney">0 ₴</div>
-            <div class="stat-desc">Заробіток</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="finalSpeed">0 км/г</div>
-            <div class="stat-desc">Макс. Швидкість</div>
-          </div>
-        </div>
-
-        <button class="btn-restart" id="restartBtn">Спробувати знову</button>
-      </div>
+    <!-- GAME OVER SCREEN -->
+    <div class="game-over-screen" id="gameOver">
+      <h2 style="font-size:26px; margin-bottom:5px;">📦 Аварія!</h2>
+      <p style="color:#9ca3af; margin-bottom:15px;">Вантаж пошкоджено під час доставки</p>
+      <button class="go-btn" id="restartBtn">Спробувати знову</button>
     </div>
   </div>
 
@@ -370,33 +425,27 @@
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const touchHandle = document.getElementById('touchHandle');
-    const gameOverModal = document.getElementById('gameOverModal');
 
-    function resizeCanvas() {
-      canvas.width = document.getElementById('gameWrapper').clientWidth;
-      canvas.height = document.getElementById('gameWrapper').clientHeight;
+    function resize() {
+      canvas.width = document.getElementById('app').clientWidth;
+      canvas.height = document.getElementById('app').clientHeight;
     }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    resize();
+    window.addEventListener('resize', resize);
 
-    // Параметри 3D перспективної камери
+    // 3D Перспектива & Камера
     let horizonY = 0;
     let bottomY = 0;
-    const Z_FAR = 600;
-    const FOV = 140;
+    const FOV = 160;
+    const Z_FAR = 700;
 
-    function updateCameraParams() {
-      horizonY = canvas.height * 0.40;
-      bottomY = canvas.height - 30;
-    }
-
-    function getScale(z) {
-      return FOV / (z + FOV);
+    function updateCamera() {
+      horizonY = canvas.height * 0.35;
+      bottomY = canvas.height - 40;
     }
 
     function project(x, z) {
-      const scale = getScale(z);
+      let scale = FOV / (z + FOV);
       return {
         x: canvas.width / 2 + x * scale,
         y: horizonY + (bottomY - horizonY) * scale,
@@ -404,106 +453,59 @@
       };
     }
 
-    // Скутер (Гравець)
-    let player = {
-      x: 0,
-      targetX: 0,
-      z: 22,
-      speed: 0,
-      baseSpeed: 1.8,
-      maxSpeed: 4.8,
-      maxRecordedSpeed: 0,
-      angle: 0
-    };
-
-    let roadOffsetY = 0;
-    let money = 0;
-    let hp = 100;
-    let obstacles = [];
-    let particles = [];
-    let spawnTimer = 0;
+    // Стан гри
+    let player = { x: 0, targetX: 0, z: 25, speed: 0, maxSpeed: 4.5 };
+    let distanceLeft = 1200; // метрів
+    let timerSec = 525; // 08:45
+    let isAccelerating = false;
+    let roadScroll = 0;
     let gameOver = false;
-    let shakeTime = 0;
 
-    function showDamagePopup(text, x, y) {
-      const popup = document.createElement('div');
-      popup.className = 'damage-popup';
-      popup.innerText = text;
-      popup.style.left = `${x}px`;
-      popup.style.top = `${y}px`;
-      document.getElementById('gameWrapper').appendChild(popup);
-      setTimeout(() => popup.remove(), 800);
-    }
-
-    function createExplosion(x, y, color) {
-      for (let i = 0; i < 15; i++) {
-        particles.push({
-          x: x,
-          y: y,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6 - 1,
-          size: 3 + Math.random() * 4,
-          color: color,
-          life: 1
-        });
-      }
-    }
-
-    function createExhaust(screenPos) {
-      particles.push({
-        x: screenPos.x + (Math.random() - 0.5) * 6,
-        y: screenPos.y + 10,
-        vx: (Math.random() - 0.5) * 1.2,
-        vy: 0.8 + Math.random() * 1.5,
-        size: 2 + Math.random() * 3,
-        color: 'rgba(148, 163, 184, 0.35)',
-        life: 0.5
+    // Генерація міських будинків з обох боків
+    let buildings = [];
+    for (let i = 0; i < 20; i++) {
+      buildings.push({
+        z: i * 40,
+        side: i % 2 === 0 ? -1 : 1,
+        height: 60 + Math.random() * 80,
+        width: 70 + Math.random() * 30,
+        color: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#fdba74', '#fde047'][Math.floor(Math.random() * 5)]
       });
     }
 
+    let obstacles = [];
     function spawnObstacle() {
-      const isCar = Math.random() > 0.45;
-      const worldX = (Math.random() - 0.5) * 210;
-
       obstacles.push({
-        x: worldX,
+        x: (Math.random() - 0.5) * 160,
         z: Z_FAR,
-        type: isCar ? 'car' : 'pothole',
-        color: isCar ? ['#ef4444', '#3b82f6', '#a855f7', '#eab308'][Math.floor(Math.random() * 4)] : '#020617'
+        color: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'][Math.floor(Math.random() * 4)]
       });
     }
 
-    function drawSkyAndCity() {
-      updateCameraParams();
-      
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      skyGrad.addColorStop(0, '#020617');
-      skyGrad.addColorStop(1, '#1e1b4b');
-      ctx.fillStyle = skyGrad;
+    // Відмальовка денного неба та сонця
+    function drawSky() {
+      updateCamera();
+      let grad = ctx.createLinearGradient(0, 0, 0, horizonY);
+      grad.addColorStop(0, '#38bdf8');
+      grad.addColorStop(1, '#bae6fd');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, canvas.width, horizonY);
 
-      // Зорі
-      ctx.fillStyle = '#ffffff';
-      for (let i = 0; i < 15; i++) {
-        let sx = (i * 29) % canvas.width;
-        let sy = (i * 17) % (horizonY - 20);
-        ctx.fillRect(sx, sy, 1.5, 1.5);
-      }
-
-      // Силует міста
-      ctx.fillStyle = '#0f172a';
-      const buildingWidths = [35, 25, 45, 30, 50, 20, 40, 35, 45];
-      let currX = 0;
-      buildingWidths.forEach((w, idx) => {
-        let h = 20 + (idx % 4) * 12;
-        ctx.fillRect(currX, horizonY - h, w, h);
-        currX += w;
-      });
+      // Сонце
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(canvas.width * 0.8, horizonY * 0.3, 22, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    function draw3DRoad() {
-      const ROAD_WIDTH = 170;
-      const SEGMENTS = 35;
+    // Відмальовка зеленої зони, дороги та тротуарів
+    function drawEnvironment() {
+      // Зелений газон
+      ctx.fillStyle = '#4ade80';
+      ctx.fillRect(0, horizonY, canvas.width, canvas.height - horizonY);
+
+      const ROAD_W = 190;
+      const SEGMENTS = 30;
       const segZ = Z_FAR / SEGMENTS;
 
       for (let i = SEGMENTS - 1; i >= 0; i--) {
@@ -513,356 +515,232 @@
         let p1 = project(0, z1);
         let p2 = project(0, z2);
 
-        let w1 = ROAD_WIDTH * p1.scale;
-        let w2 = ROAD_WIDTH * p2.scale;
+        let w1 = ROAD_W * p1.scale;
+        let w2 = ROAD_W * p2.scale;
 
-        ctx.fillStyle = (i % 2 === 0) ? '#1e293b' : '#1a2332';
+        // Тротуари
+        let sw1 = (ROAD_W + 40) * p1.scale;
+        let sw2 = (ROAD_W + 40) * p2.scale;
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(p1.x - sw1, p1.y);
+        ctx.lineTo(p1.x + sw1, p1.y);
+        ctx.lineTo(p2.x + sw2, p2.y);
+        ctx.lineTo(p2.x - sw2, p2.y);
+        ctx.fill();
+
+        // Асфальтове полотно
+        ctx.fillStyle = '#475569';
         ctx.beginPath();
         ctx.moveTo(p1.x - w1, p1.y);
         ctx.lineTo(p1.x + w1, p1.y);
         ctx.lineTo(p2.x + w2, p2.y);
         ctx.lineTo(p2.x - w2, p2.y);
-        ctx.closePath();
         ctx.fill();
 
-        // Бордюри
-        let curbW1 = 16 * p1.scale;
-        let curbW2 = 16 * p2.scale;
-        let curbColor = (Math.floor((z1 + roadOffsetY * 4) / 40) % 2 === 0) ? '#ef4444' : '#f8fafc';
-
-        ctx.fillStyle = curbColor;
+        // Синя навігаційна лінія GPS
+        let gpsW1 = 18 * p1.scale;
+        let gpsW2 = 18 * p2.scale;
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.85)';
         ctx.beginPath();
-        ctx.moveTo(p1.x - w1 - curbW1, p1.y);
-        ctx.lineTo(p1.x - w1, p1.y);
-        ctx.lineTo(p2.x - w2, p2.y);
-        ctx.lineTo(p2.x - w2 - curbW2, p2.y);
-        ctx.closePath();
+        ctx.moveTo(p1.x - gpsW1, p1.y);
+        ctx.lineTo(p1.x + gpsW1, p1.y);
+        ctx.lineTo(p2.x + gpsW2, p2.y);
+        ctx.lineTo(p2.x - gpsW2, p2.y);
         ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(p1.x + w1, p1.y);
-        ctx.lineTo(p1.x + w1 + curbW1, p1.y);
-        ctx.lineTo(p2.x + w2 + curbW2, p2.y);
-        ctx.lineTo(p2.x + w2, p2.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Лінії дороги
-        if (Math.floor((z1 + roadOffsetY * 5) / 50) % 2 === 0) {
-          let dashW1 = 5 * p1.scale;
-          let dashW2 = 5 * p2.scale;
-          ctx.fillStyle = '#f59e0b';
+        // Розділова розмітка
+        if (Math.floor((z1 + roadScroll * 4) / 40) % 2 === 0) {
+          let dash1 = 4 * p1.scale;
+          let dash2 = 4 * p2.scale;
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.moveTo(p1.x - dashW1, p1.y);
-          ctx.lineTo(p1.x + dashW1, p1.y);
-          ctx.lineTo(p2.x + dashW2, p2.y);
-          ctx.lineTo(p2.x - dashW2, p2.y);
-          ctx.closePath();
+          ctx.moveTo(p1.x - dash1, p1.y);
+          ctx.lineTo(p1.x + dash1, p1.y);
+          ctx.lineTo(p2.x + dash2, p2.y);
+          ctx.lineTo(p2.x - dash2, p2.y);
           ctx.fill();
         }
       }
     }
 
-    function drawObstacle(obs) {
-      let p = project(obs.x, obs.z);
+    // Малювання 3D будинків обабіч дороги
+    function drawBuildings() {
+      buildings.sort((a, b) => b.z - a.z);
 
-      if (obs.type === 'pothole') {
-        let rx = 32 * p.scale;
-        let ry = 10 * p.scale;
+      buildings.forEach(b => {
+        let roadOffset = b.side * 140;
+        let p = project(roadOffset, b.z);
 
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.beginPath();
-        ctx.ellipse(p.x, p.y + 2, rx + 2, ry + 1, 0, 0, Math.PI * 2);
-        ctx.fill();
+        let bw = b.width * p.scale;
+        let bh = b.height * p.scale;
 
-        ctx.fillStyle = '#020617';
-        ctx.beginPath();
-        ctx.ellipse(p.x, p.y, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fill();
+        // Фасад
+        ctx.fillStyle = b.color;
+        ctx.fillRect(p.x - bw / 2, p.y - bh, bw, bh);
 
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 1.5 * p.scale;
-        ctx.stroke();
-      } else {
-        let w = 70 * p.scale;
-        let h = 60 * p.scale;
+        // Дах
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(p.x - bw / 2, p.y - bh - (8 * p.scale), bw, 8 * p.scale);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(p.x - w/2, p.y - 2, w, 8 * p.scale);
-
-        ctx.fillStyle = obs.color;
-        ctx.beginPath();
-        ctx.roundRect(p.x - w/2, p.y - h, w, h, 6 * p.scale);
-        ctx.fill();
-
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.roundRect(p.x - w/2 + 6 * p.scale, p.y - h + 5 * p.scale, w - 12 * p.scale, h * 0.3, 3 * p.scale);
-        ctx.fill();
-
-        ctx.fillStyle = '#ef4444';
-        ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 6 * p.scale;
-        ctx.fillRect(p.x - w/2 + 4 * p.scale, p.y - h * 0.45, 12 * p.scale, 6 * p.scale);
-        ctx.fillRect(p.x + w/2 - 16 * p.scale, p.y - h * 0.45, 12 * p.scale, 6 * p.scale);
-        ctx.shadowBlur = 0;
-
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(p.x - 10 * p.scale, p.y - h * 0.25, 20 * p.scale, 5 * p.scale);
-      }
-    }
-
-    function drawPlayer3D() {
-      let p = project(player.x, player.z);
-
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(player.angle);
-
-      let scale = p.scale * 1.1;
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.beginPath();
-      ctx.ellipse(0, 2, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(-5 * scale, -10 * scale, 10 * scale, 14 * scale);
-
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(-14 * scale, -22 * scale, 28 * scale, 16 * scale);
-
-      ctx.fillStyle = '#f97316';
-      ctx.beginPath();
-      ctx.roundRect(-16 * scale, -32 * scale, 32 * scale, 18 * scale, 4 * scale);
-      ctx.fill();
-
-      ctx.fillStyle = '#ef4444';
-      ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 8;
-      ctx.fillRect(-8 * scale, -24 * scale, 16 * scale, 5 * scale);
-      ctx.shadowBlur = 0;
-
-      ctx.fillStyle = '#10b981';
-      ctx.beginPath();
-      ctx.roundRect(-18 * scale, -60 * scale, 36 * scale, 30 * scale, 6 * scale);
-      ctx.fill();
-      ctx.strokeStyle = '#059669';
-      ctx.lineWidth = 2 * scale;
-      ctx.stroke();
-
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(-14 * scale, -38 * scale, 28 * scale, 3 * scale);
-
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.arc(0, -68 * scale, 11 * scale, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(-24 * scale, -52 * scale, 48 * scale, 3 * scale);
-
-      ctx.restore();
-    }
-
-    function drawParticles() {
-      particles.forEach((p, index) => {
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
-
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.04;
-
-        if (p.life <= 0) particles.splice(index, 1);
+        // Вікна
+        ctx.fillStyle = '#fef08a';
+        for (let wx = -bw/3; wx <= bw/3; wx += 14 * p.scale) {
+          for (let wy = -bh + 10 * p.scale; wy < -10 * p.scale; wy += 18 * p.scale) {
+            ctx.fillRect(p.x + wx, p.y + wy, 6 * p.scale, 8 * p.scale);
+          }
+        }
       });
     }
 
-    function draw() {
+    // Червоний 3D Пін прибуття
+    function drawTargetPin() {
+      let p = project(0, 500);
+      let size = 30 * p.scale;
+
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y - size * 2, size, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(p.x - size, p.y - size * 2);
+      ctx.lineTo(p.x + size, p.y - size * 2);
+      ctx.lineTo(p.x, p.y);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y - size * 2, size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Скутер кур'єра (Зелений шолом та рюкзак)
+    function drawPlayer() {
+      let p = project(player.x, player.z);
+      let s = p.scale * 1.2;
+
       ctx.save();
+      ctx.translate(p.x, p.y);
 
-      if (shakeTime > 0) {
-        let dx = (Math.random() - 0.5) * 6;
-        let dy = (Math.random() - 0.5) * 6;
-        ctx.translate(dx, dy);
-        shakeTime--;
-      }
+      // Тінь
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 20 * s, 8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-      drawSkyAndCity();
-      draw3DRoad();
+      // Скутер
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-6 * s, -14 * s, 12 * s, 16 * s);
 
-      obstacles.sort((a, b) => b.z - a.z);
-      obstacles.forEach(drawObstacle);
+      // Рюкзак кур'єра
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.roundRect(-16 * s, -45 * s, 32 * s, 26 * s, 5 * s);
+      ctx.fill();
 
-      drawParticles();
-      drawPlayer3D();
+      // Шолом
+      ctx.fillStyle = '#166534';
+      ctx.beginPath();
+      ctx.arc(0, -52 * s, 10 * s, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.restore();
     }
 
-    let lastTime = performance.now();
+    function drawObstacles() {
+      obstacles.forEach(obs => {
+        let p = project(obs.x, obs.z);
+        let w = 60 * p.scale;
+        let h = 45 * p.scale;
 
-    function update(now) {
-      let dt = (now - lastTime) / 1000;
-      if (!dt || dt > 0.1) dt = 0.016;
-      lastTime = now;
+        ctx.fillStyle = obs.color;
+        ctx.beginPath();
+        ctx.roundRect(p.x - w/2, p.y - h, w, h, 4 * p.scale);
+        ctx.fill();
+      });
+    }
 
-      let timeFactor = dt * 60;
+    let spawnTimer = 0;
 
-      if (gameOver) {
-        draw();
-        requestAnimationFrame(update);
-        return;
+    function update() {
+      if (gameOver) return;
+
+      // Керування прискоренням
+      if (isAccelerating) {
+        if (player.speed < player.maxSpeed) player.speed += 0.04;
+      } else {
+        if (player.speed > 0) player.speed -= 0.02;
+        if (player.speed < 0) player.speed = 0;
       }
 
-      if (player.speed < player.maxSpeed) {
-        player.speed += 0.012 * timeFactor;
-      }
+      player.x += (player.targetX - player.x) * 0.15;
+      roadScroll += player.speed;
 
-      let currentDisplaySpeed = Math.round(player.speed * 12);
-      if (currentDisplaySpeed > player.maxRecordedSpeed) {
-        player.maxRecordedSpeed = currentDisplaySpeed;
-      }
+      // Рух будинків
+      buildings.forEach(b => {
+        b.z -= player.speed * 1.8;
+        if (b.z < 0) b.z = Z_FAR;
+      });
 
-      let dx = player.targetX - player.x;
-      player.x += dx * 0.18 * timeFactor;
-      player.angle = (dx * 0.0025);
-
-      // Оновлення індикатора керування
-      let normHandlePos = 50 + (player.x / 135) * 40;
-      touchHandle.style.left = `${normHandlePos}%`;
-
-      roadOffsetY += player.speed * timeFactor;
-
-      if (Math.random() < 0.4) {
-        let pPos = project(player.x, player.z);
-        createExhaust(pPos);
-      }
-
-      if (player.speed > 0) {
-        money += player.speed * 0.08 * timeFactor;
-        spawnTimer += player.speed * timeFactor;
-        
-        if (spawnTimer > 150) {
-          spawnObstacle();
-          spawnTimer = 0;
-        }
+      // Перешкоди
+      spawnTimer += player.speed;
+      if (spawnTimer > 180) {
+        spawnObstacle();
+        spawnTimer = 0;
       }
 
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
-        obs.z -= player.speed * 2.0 * timeFactor;
+        obs.z -= player.speed * 2.2;
 
-        if (obs.z <= player.z + 15 && obs.z >= player.z - 15) {
-          if (Math.abs(obs.x - player.x) < 36) {
-            let damage = obs.type === 'car' ? 30 : 15;
-            hp -= damage;
-            
-            shakeTime = 10;
-            let pPos = project(obs.x, obs.z);
-            createExplosion(pPos.x, pPos.y, obs.type === 'car' ? '#ef4444' : '#64748b');
-            showDamagePopup(`-${damage}%`, pPos.x, pPos.y - 20);
-
-            obstacles.splice(i, 1);
-            
-            if (tg.HapticFeedback) {
-              tg.HapticFeedback.notificationOccurred('error');
-            }
-            
-            if (hp <= 0) {
-              hp = 0;
-              triggerGameOver();
-            }
-            continue;
+        if (obs.z <= player.z + 10 && obs.z >= player.z - 10) {
+          if (Math.abs(obs.x - player.x) < 30) {
+            gameOver = true;
+            document.getElementById('gameOver').classList.add('active');
           }
         }
-
-        if (obs.z < 0) {
-          obstacles.splice(i, 1);
-        }
+        if (obs.z < 0) obstacles.splice(i, 1);
       }
 
-      // Оновлення HUD елементів
-      document.getElementById('speed').innerText = currentDisplaySpeed;
-      document.getElementById('money').innerText = Math.floor(money) + ' ₴';
-      
-      const hpFill = document.getElementById('hpFill');
-      document.getElementById('hpText').innerText = `${hp}%`;
-      hpFill.style.width = `${hp}%`;
-      
-      if (hp <= 30) {
-        hpFill.classList.add('critical');
-      } else {
-        hpFill.classList.remove('critical');
+      // Дистанція
+      if (player.speed > 0 && distanceLeft > 0) {
+        distanceLeft -= player.speed * 0.1;
+        document.getElementById('distText').innerText = `${(distanceLeft / 1000).toFixed(1)} км`;
       }
 
-      draw();
+      // Отрисовка
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawSky();
+      drawEnvironment();
+      drawBuildings();
+      drawTargetPin();
+      drawObstacles();
+      drawPlayer();
+
       requestAnimationFrame(update);
     }
 
-    function triggerGameOver() {
-      gameOver = true;
-      document.getElementById('finalMoney').innerText = `${Math.floor(money)} ₴`;
-      document.getElementById('finalSpeed').innerText = `${player.maxRecordedSpeed} км/г`;
-      gameOverModal.classList.add('active');
-    }
+    // Кнопки інтерфейсу
+    document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); player.targetX = Math.max(-110, player.targetX - 40); });
+    document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); player.targetX = Math.min(110, player.targetX + 40); });
+    
+    const gasBtn = document.getElementById('btnGas');
+    gasBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isAccelerating = true; });
+    gasBtn.addEventListener('touchend', (e) => { e.preventDefault(); isAccelerating = false; });
+    gasBtn.addEventListener('mousedown', () => isAccelerating = true);
+    gasBtn.addEventListener('mouseup', () => isAccelerating = false);
 
-    function restartGame() {
-      hp = 100;
-      money = 0;
-      obstacles = [];
-      particles = [];
+    document.getElementById('restartBtn').addEventListener('click', () => {
+      gameOver = false;
       player.x = 0;
       player.targetX = 0;
-      player.speed = player.baseSpeed;
-      player.maxRecordedSpeed = 0;
-      gameOverModal.classList.remove('active');
-      gameOver = false;
-    }
-
-    function updateTouchPos(clientX) {
-      let rect = canvas.getBoundingClientRect();
-      let touchX = clientX - rect.left;
-      let normX = (touchX - canvas.width / 2) / (canvas.width / 2);
-      player.targetX = Math.max(-135, Math.min(135, normX * 135));
-    }
-
-    window.addEventListener('touchstart', (e) => {
-      if (!gameOver) updateTouchPos(e.touches[0].clientX);
-    });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!gameOver && e.touches.length > 0) {
-        updateTouchPos(e.touches[0].clientX);
-      }
-    });
-
-    let isMouseDown = false;
-    canvas.addEventListener('mousedown', (e) => {
-      if (!gameOver) {
-        isMouseDown = true;
-        updateTouchPos(e.clientX);
-      }
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (isMouseDown && !gameOver) {
-        updateTouchPos(e.clientX);
-      }
-    });
-
-    window.addEventListener('mouseup', () => { isMouseDown = false; });
-
-    document.getElementById('restartBtn').addEventListener('click', restartGame);
-
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') player.targetX = Math.max(-135, player.targetX - 35);
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') player.targetX = Math.min(135, player.targetX + 35);
-      if (gameOver && (e.key === ' ' || e.key === 'Enter')) restartGame();
+      player.speed = 0;
+      distanceLeft = 1200;
+      obstacles = [];
+      document.getElementById('gameOver').classList.remove('active');
+      requestAnimationFrame(update);
     });
 
     requestAnimationFrame(update);
