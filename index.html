@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Delivery Simulator - Варіант Б</title>
+  <title>Delivery Simulator - Варіант В</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * {
@@ -54,14 +54,48 @@
       max-width: 420px;
     }
 
-    .touch-guide {
+    .steering-container {
       width: 100%;
-      padding: 12px;
+      max-width: 420px;
+      padding: 15px 20px;
       background: #1e1e1e;
-      text-align: center;
-      font-size: 13px;
-      color: #aaa;
-      border-top: 1px solid #333;
+      border-top: 2px solid #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .steering-track {
+      width: 100%;
+      height: 50px;
+      background: #2a2a2a;
+      border-radius: 25px;
+      position: relative;
+      border: 2px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .steering-knob {
+      width: 60px;
+      height: 42px;
+      background: #e67e22;
+      border-radius: 20px;
+      position: absolute;
+      left: calc(50% - 30px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+    }
+
+    .steering-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -75,8 +109,11 @@
 
   <canvas id="gameCanvas"></canvas>
 
-  <div class="touch-guide">
-    👇 Затисни й веди пальцем ліворуч/праворуч
+  <div class="steering-container">
+    <div class="steering-track" id="steeringTrack">
+      <div class="steering-knob" id="steeringKnob">🛵</div>
+    </div>
+    <div class="steering-label">👈 Совай бігунок для керування 👉</div>
   </div>
 
   <script>
@@ -88,18 +125,18 @@
 
     function resizeCanvas() {
       canvas.width = Math.min(window.innerWidth, 420);
-      canvas.height = window.innerHeight - 80;
+      canvas.height = window.innerHeight - 130;
     }
     resizeCanvas();
 
     let player = {
       x: canvas.width / 2 - 15,
-      targetX: canvas.width / 2 - 15,
       y: canvas.height - 80,
       width: 30,
       height: 50,
       speed: 0,
-      maxSpeed: 8
+      maxSpeed: 8,
+      steerVelocity: 0
     };
 
     let roadOffsetY = 0;
@@ -134,7 +171,6 @@
       ctx.fillStyle = '#34495e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Розмітка
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.setLineDash([20, 20]);
@@ -144,7 +180,6 @@
       ctx.lineTo(canvas.width / 2, canvas.height);
       ctx.stroke();
 
-      // Перешкоди
       obstacles.forEach(obs => {
         if (obs.type === 'pothole') {
           ctx.fillStyle = '#1a252f';
@@ -157,11 +192,9 @@
         }
       });
 
-      // Скутер
       ctx.fillStyle = '#e67e22';
       ctx.fillRect(player.x, player.y, player.width, player.height);
 
-      // Рюкзак
       ctx.fillStyle = '#2ecc71';
       ctx.fillRect(player.x + 5, player.y + 30, 20, 15);
 
@@ -193,13 +226,12 @@
         return;
       }
 
-      // Набір швидкості
       if (player.speed < player.maxSpeed) {
         player.speed += 0.15 * timeFactor;
       }
 
-      // Плавне слідування за пальцем
-      player.x += (player.targetX - player.x) * 0.25 * timeFactor;
+      player.x += player.steerVelocity * timeFactor;
+      player.x = Math.max(15, Math.min(canvas.width - player.width - 15, player.x));
 
       roadOffsetY += player.speed * timeFactor;
 
@@ -249,8 +281,9 @@
       money = 0;
       obstacles = [];
       player.x = canvas.width / 2 - 15;
-      player.targetX = player.x;
       player.speed = 0;
+      player.steerVelocity = 0;
+      resetKnob();
       gameOver = false;
     }
 
@@ -260,53 +293,68 @@
       }
     }
 
-    // Обробка перетягування пальцем
-    function updateTouchPos(clientX) {
-      let rect = canvas.getBoundingClientRect();
-      let touchX = clientX - rect.left - player.width / 2;
-      
-      // Обмеження межами дороги
-      let minX = 15;
-      let maxX = canvas.width - player.width - 15;
-      player.targetX = Math.max(minX, Math.min(maxX, touchX));
+    // Логіка слайдера
+    const track = document.getElementById('steeringTrack');
+    const knob = document.getElementById('steeringKnob');
+    let isDragging = false;
+
+    function handleSteer(clientX) {
+      const rect = track.getBoundingClientRect();
+      let offsetX = clientX - rect.left;
+      offsetX = Math.max(30, Math.min(rect.width - 30, offsetX));
+
+      knob.style.left = `${offsetX - 30}px`;
+
+      let normalized = (offsetX - rect.width / 2) / (rect.width / 2 - 30);
+      player.steerVelocity = normalized * 6;
     }
 
-    window.addEventListener('touchstart', (e) => {
-      if (gameOver) {
-        restartGame();
-        return;
-      }
-      updateTouchPos(e.touches[0].clientX);
+    function resetKnob() {
+      const rect = track.getBoundingClientRect();
+      knob.style.left = `calc(50% - 30px)`;
+      player.steerVelocity = 0;
+    }
+
+    track.addEventListener('touchstart', (e) => {
+      if (gameOver) { restartGame(); return; }
+      isDragging = true;
+      handleSteer(e.touches[0].clientX);
       triggerHaptic();
     });
 
     window.addEventListener('touchmove', (e) => {
-      if (!gameOver && e.touches.length > 0) {
-        updateTouchPos(e.touches[0].clientX);
+      if (isDragging && !gameOver && e.touches.length > 0) {
+        handleSteer(e.touches[0].clientX);
       }
     });
 
-    // Миша для ПК
-    let isMouseDown = false;
-    canvas.addEventListener('mousedown', (e) => {
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+      resetKnob();
+    });
+
+    // Підтримка миші на ПК
+    track.addEventListener('mousedown', (e) => {
       if (gameOver) { restartGame(); return; }
-      isMouseDown = true;
-      updateTouchPos(e.clientX);
+      isDragging = true;
+      handleSteer(e.clientX);
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (isMouseDown && !gameOver) {
-        updateTouchPos(e.clientX);
+      if (isDragging && !gameOver) {
+        handleSteer(e.clientX);
       }
     });
 
-    window.addEventListener('mouseup', () => { isMouseDown = false; });
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        resetKnob();
+      }
+    });
 
-    // Клавіатура для ПК
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') player.targetX = Math.max(15, player.targetX - 25);
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') player.targetX = Math.min(canvas.width - player.width - 15, player.targetX + 25);
-      if (gameOver && (e.key === ' ' || e.key === 'Enter')) restartGame();
+    window.addEventListener('click', () => {
+      if (gameOver) restartGame();
     });
 
     requestAnimationFrame(update);
