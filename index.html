@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Delivery Simulator - Варіант А</title>
+  <title>Delivery Simulator - Варіант Б</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * {
       box-sizing: border-box;
-      touch-action: manipulation;
+      touch-action: none;
     }
     body {
       margin: 0;
@@ -58,18 +58,10 @@
       width: 100%;
       padding: 12px;
       background: #1e1e1e;
-      display: flex;
-      justify-content: space-between;
       text-align: center;
       font-size: 13px;
       color: #aaa;
       border-top: 1px solid #333;
-    }
-    .touch-zone-hint {
-      width: 48%;
-      padding: 8px;
-      background: #2a2a2a;
-      border-radius: 6px;
     }
   </style>
 </head>
@@ -84,8 +76,7 @@
   <canvas id="gameCanvas"></canvas>
 
   <div class="touch-guide">
-    <div class="touch-zone-hint">👈 Тисни ліворуч</div>
-    <div class="touch-zone-hint">Тисни праворуч 👉</div>
+    👇 Затисни й веди пальцем ліворуч/праворуч
   </div>
 
   <script>
@@ -97,18 +88,18 @@
 
     function resizeCanvas() {
       canvas.width = Math.min(window.innerWidth, 420);
-      canvas.height = window.innerHeight - 100;
+      canvas.height = window.innerHeight - 80;
     }
     resizeCanvas();
 
     let player = {
       x: canvas.width / 2 - 15,
+      targetX: canvas.width / 2 - 15,
       y: canvas.height - 80,
       width: 30,
       height: 50,
       speed: 0,
-      maxSpeed: 8,
-      steerSpeed: 5.5
+      maxSpeed: 8
     };
 
     let roadOffsetY = 0;
@@ -117,8 +108,6 @@
     let obstacles = [];
     let spawnTimer = 0;
     let gameOver = false;
-
-    let controlsState = { left: false, right: false };
 
     function spawnObstacle() {
       const size = 30 + Math.random() * 15;
@@ -145,7 +134,7 @@
       ctx.fillStyle = '#34495e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Дорожня розмітка
+      // Розмітка
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.setLineDash([20, 20]);
@@ -172,7 +161,7 @@
       ctx.fillStyle = '#e67e22';
       ctx.fillRect(player.x, player.y, player.width, player.height);
 
-      // Термосумка
+      // Рюкзак
       ctx.fillStyle = '#2ecc71';
       ctx.fillRect(player.x + 5, player.y + 30, 20, 15);
 
@@ -204,18 +193,13 @@
         return;
       }
 
-      // Авто-газ: скутер завжди набирає швидкість
+      // Набір швидкості
       if (player.speed < player.maxSpeed) {
         player.speed += 0.15 * timeFactor;
       }
 
-      // Повороти
-      if (controlsState.left && player.x > 15) {
-        player.x -= player.steerSpeed * timeFactor;
-      }
-      if (controlsState.right && player.x < canvas.width - player.width - 15) {
-        player.x += player.steerSpeed * timeFactor;
-      }
+      // Плавне слідування за пальцем
+      player.x += (player.targetX - player.x) * 0.25 * timeFactor;
 
       roadOffsetY += player.speed * timeFactor;
 
@@ -265,6 +249,7 @@
       money = 0;
       obstacles = [];
       player.x = canvas.width / 2 - 15;
+      player.targetX = player.x;
       player.speed = 0;
       gameOver = false;
     }
@@ -275,20 +260,15 @@
       }
     }
 
-    // Обробка доторків до лівої/правої половини екрана
-    function handleTouch(e) {
-      if (gameOver) return;
-      controlsState.left = false;
-      controlsState.right = false;
-
-      for (let i = 0; i < e.touches.length; i++) {
-        let x = e.touches[i].clientX;
-        if (x < window.innerWidth / 2) {
-          controlsState.left = true;
-        } else {
-          controlsState.right = true;
-        }
-      }
+    // Обробка перетягування пальцем
+    function updateTouchPos(clientX) {
+      let rect = canvas.getBoundingClientRect();
+      let touchX = clientX - rect.left - player.width / 2;
+      
+      // Обмеження межами дороги
+      let minX = 15;
+      let maxX = canvas.width - player.width - 15;
+      player.targetX = Math.max(minX, Math.min(maxX, touchX));
     }
 
     window.addEventListener('touchstart', (e) => {
@@ -296,43 +276,37 @@
         restartGame();
         return;
       }
-      handleTouch(e);
+      updateTouchPos(e.touches[0].clientX);
       triggerHaptic();
     });
 
-    window.addEventListener('touchmove', handleTouch);
-
-    window.addEventListener('touchend', (e) => {
-      if (e.touches.length === 0) {
-        controlsState.left = false;
-        controlsState.right = false;
-      } else {
-        handleTouch(e);
+    window.addEventListener('touchmove', (e) => {
+      if (!gameOver && e.touches.length > 0) {
+        updateTouchPos(e.touches[0].clientX);
       }
     });
 
     // Миша для ПК
-    window.addEventListener('mousedown', (e) => {
+    let isMouseDown = false;
+    canvas.addEventListener('mousedown', (e) => {
       if (gameOver) { restartGame(); return; }
-      if (e.clientX < window.innerWidth / 2) controlsState.left = true;
-      else controlsState.right = true;
+      isMouseDown = true;
+      updateTouchPos(e.clientX);
     });
 
-    window.addEventListener('mouseup', () => {
-      controlsState.left = false;
-      controlsState.right = false;
+    window.addEventListener('mousemove', (e) => {
+      if (isMouseDown && !gameOver) {
+        updateTouchPos(e.clientX);
+      }
     });
+
+    window.addEventListener('mouseup', () => { isMouseDown = false; });
 
     // Клавіатура для ПК
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') controlsState.left = true;
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') controlsState.right = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') player.targetX = Math.max(15, player.targetX - 25);
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') player.targetX = Math.min(canvas.width - player.width - 15, player.targetX + 25);
       if (gameOver && (e.key === ' ' || e.key === 'Enter')) restartGame();
-    });
-
-    window.addEventListener('keyup', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') controlsState.left = false;
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') controlsState.right = false;
     });
 
     requestAnimationFrame(update);
