@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Hardcore Delivery</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .card {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      width: 80%;
+    }
+    button {
+      background: #e67e22;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="user-name">Привіт, Кур'єр!</h2>
+    <p>Твій баланс: <b style="color: #2ecc71;">0 ₴</b></p>
+    <p>Стан транспорту: 100%</p>
+    <button onclick="testVibration()">Тест вібрації Telegram</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      document.getElementById('user-name').innerText = `Привіт, ${tg.initDataUnsafe.user.first_name}!`;
+    }
+
+    function testVibration() {
+      if (tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      } else {
+        alert('Відкрито поза Telegram');
+      }
+    }
+  </script>
+</body>
+</html>
