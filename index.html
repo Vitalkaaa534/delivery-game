@@ -258,7 +258,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       z-index: 20;
     }
 
@@ -294,6 +294,11 @@
       justify-content: space-between;
       align-items: center;
       padding: 0 10px;
+    }
+
+    .steering-group {
+      display: flex;
+      gap: 12px;
     }
 
     .btn-ctrl {
@@ -404,10 +409,13 @@
         <div class="timer-val" id="timer">08:45</div>
       </div>
 
+      <!-- ЗМІНЕНА ПАНЕЛЬ КЕРУВАННЯ: СТРІЛКИ ЛІВОРУЧ, ГАЗ ПРАВОРУЧ -->
       <div class="controls-row">
-        <div class="btn-ctrl" id="btnLeft">⬅️</div>
+        <div class="steering-group">
+          <div class="btn-ctrl" id="btnLeft">⬅️</div>
+          <div class="btn-ctrl" id="btnRight">➡️</div>
+        </div>
         <div class="btn-ctrl" id="btnGas" style="width:68px; height:68px; background:var(--accent-green);">⬆️</div>
-        <div class="btn-ctrl" id="btnRight">➡️</div>
       </div>
     </div>
 
@@ -455,13 +463,12 @@
 
     // Стан гри
     let player = { x: 0, targetX: 0, z: 25, speed: 0, maxSpeed: 4.5 };
-    let distanceLeft = 1200; // метрів
-    let timerSec = 525; // 08:45
+    let distanceLeft = 1200;
     let isAccelerating = false;
     let roadScroll = 0;
     let gameOver = false;
 
-    // Генерація міських будинків з обох боків
+    // Генерація міських будинків
     let buildings = [];
     for (let i = 0; i < 20; i++) {
       buildings.push({
@@ -482,7 +489,6 @@
       });
     }
 
-    // Відмальовка денного неба та сонця
     function drawSky() {
       updateCamera();
       let grad = ctx.createLinearGradient(0, 0, 0, horizonY);
@@ -491,16 +497,13 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, canvas.width, horizonY);
 
-      // Сонце
       ctx.fillStyle = '#fef08a';
       ctx.beginPath();
       ctx.arc(canvas.width * 0.8, horizonY * 0.3, 22, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Відмальовка зеленої зони, дороги та тротуарів
     function drawEnvironment() {
-      // Зелений газон
       ctx.fillStyle = '#4ade80';
       ctx.fillRect(0, horizonY, canvas.width, canvas.height - horizonY);
 
@@ -518,7 +521,6 @@
         let w1 = ROAD_W * p1.scale;
         let w2 = ROAD_W * p2.scale;
 
-        // Тротуари
         let sw1 = (ROAD_W + 40) * p1.scale;
         let sw2 = (ROAD_W + 40) * p2.scale;
 
@@ -530,7 +532,6 @@
         ctx.lineTo(p2.x - sw2, p2.y);
         ctx.fill();
 
-        // Асфальтове полотно
         ctx.fillStyle = '#475569';
         ctx.beginPath();
         ctx.moveTo(p1.x - w1, p1.y);
@@ -539,7 +540,6 @@
         ctx.lineTo(p2.x - w2, p2.y);
         ctx.fill();
 
-        // Синя навігаційна лінія GPS
         let gpsW1 = 18 * p1.scale;
         let gpsW2 = 18 * p2.scale;
         ctx.fillStyle = 'rgba(37, 99, 235, 0.85)';
@@ -550,7 +550,6 @@
         ctx.lineTo(p2.x - gpsW2, p2.y);
         ctx.fill();
 
-        // Розділова розмітка
         if (Math.floor((z1 + roadScroll * 4) / 40) % 2 === 0) {
           let dash1 = 4 * p1.scale;
           let dash2 = 4 * p2.scale;
@@ -565,7 +564,6 @@
       }
     }
 
-    // Малювання 3D будинків обабіч дороги
     function drawBuildings() {
       buildings.sort((a, b) => b.z - a.z);
 
@@ -576,15 +574,12 @@
         let bw = b.width * p.scale;
         let bh = b.height * p.scale;
 
-        // Фасад
         ctx.fillStyle = b.color;
         ctx.fillRect(p.x - bw / 2, p.y - bh, bw, bh);
 
-        // Дах
         ctx.fillStyle = '#64748b';
         ctx.fillRect(p.x - bw / 2, p.y - bh - (8 * p.scale), bw, 8 * p.scale);
 
-        // Вікна
         ctx.fillStyle = '#fef08a';
         for (let wx = -bw/3; wx <= bw/3; wx += 14 * p.scale) {
           for (let wy = -bh + 10 * p.scale; wy < -10 * p.scale; wy += 18 * p.scale) {
@@ -594,7 +589,6 @@
       });
     }
 
-    // Червоний 3D Пін прибуття
     function drawTargetPin() {
       let p = project(0, 500);
       let size = 30 * p.scale;
@@ -616,7 +610,6 @@
       ctx.fill();
     }
 
-    // Скутер кур'єра (Зелений шолом та рюкзак)
     function drawPlayer() {
       let p = project(player.x, player.z);
       let s = p.scale * 1.2;
@@ -624,23 +617,19 @@
       ctx.save();
       ctx.translate(p.x, p.y);
 
-      // Тінь
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
       ctx.beginPath();
       ctx.ellipse(0, 0, 20 * s, 8 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Скутер
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(-6 * s, -14 * s, 12 * s, 16 * s);
 
-      // Рюкзак кур'єра
       ctx.fillStyle = '#22c55e';
       ctx.beginPath();
       ctx.roundRect(-16 * s, -45 * s, 32 * s, 26 * s, 5 * s);
       ctx.fill();
 
-      // Шолом
       ctx.fillStyle = '#166534';
       ctx.beginPath();
       ctx.arc(0, -52 * s, 10 * s, 0, Math.PI * 2);
@@ -667,7 +656,6 @@
     function update() {
       if (gameOver) return;
 
-      // Керування прискоренням
       if (isAccelerating) {
         if (player.speed < player.maxSpeed) player.speed += 0.04;
       } else {
@@ -678,13 +666,11 @@
       player.x += (player.targetX - player.x) * 0.15;
       roadScroll += player.speed;
 
-      // Рух будинків
       buildings.forEach(b => {
         b.z -= player.speed * 1.8;
         if (b.z < 0) b.z = Z_FAR;
       });
 
-      // Перешкоди
       spawnTimer += player.speed;
       if (spawnTimer > 180) {
         spawnObstacle();
@@ -704,13 +690,11 @@
         if (obs.z < 0) obstacles.splice(i, 1);
       }
 
-      // Дистанція
       if (player.speed > 0 && distanceLeft > 0) {
         distanceLeft -= player.speed * 0.1;
         document.getElementById('distText').innerText = `${(distanceLeft / 1000).toFixed(1)} км`;
       }
 
-      // Отрисовка
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawSky();
       drawEnvironment();
@@ -722,10 +706,11 @@
       requestAnimationFrame(update);
     }
 
-    // Кнопки інтерфейсу
+    // Поворот ліворуч/праворуч (ліва рука)
     document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); player.targetX = Math.max(-110, player.targetX - 40); });
     document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); player.targetX = Math.min(110, player.targetX + 40); });
     
+    // Газ (права рука)
     const gasBtn = document.getElementById('btnGas');
     gasBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isAccelerating = true; });
     gasBtn.addEventListener('touchend', (e) => { e.preventDefault(); isAccelerating = false; });
@@ -747,3 +732,4 @@
   </script>
 </body>
 </html>
+
