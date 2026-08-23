@@ -84,8 +84,8 @@
 <body>
 
   <div class="hud">
-    <div class="hud-item">💰 Бюджет: <span class="val" id="money">250 ₴</span></div>
-    <div class="hud-item">⚡ Швидкість: <span id="speed">0</span> км/г</div>
+    <div class="hud-item">💰 Заробіток: <span class="val" id="money">0 ₴</span></div>
+    <div class="hud-item">⚡ <span id="speed">0</span> км/г</div>
     <div class="hud-item">📦 Вантаж: <span style="color:#e74c3c;" id="hp">100%</span></div>
   </div>
 
@@ -118,11 +118,41 @@
 
     let roadOffsetY = 0;
     let isAccelerating = false;
+    let money = 0;
+    let hp = 100;
+    let obstacles = [];
+    let spawnTimer = 0;
+    let gameOver = false;
+
+    // Генерація перешкод (ями та авто)
+    function spawnObstacle() {
+      const size = 30 + Math.random() * 15;
+      const x = 15 + Math.random() * (canvas.width - size - 30);
+      obstacles.push({
+        x: x,
+        y: -size,
+        width: size,
+        height: size,
+        type: Math.random() > 0.4 ? 'pothole' : 'car'
+      });
+    }
+
+    // Перевірка зіткнень
+    function checkCollision(rect1, rect2) {
+      return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+      );
+    }
 
     function draw() {
+      // Асфальт
       ctx.fillStyle = '#34495e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Дорожня розмітка
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.setLineDash([20, 20]);
@@ -132,14 +162,47 @@
       ctx.lineTo(canvas.width / 2, canvas.height);
       ctx.stroke();
 
+      // Малювання перешкод
+      obstacles.forEach(obs => {
+        if (obs.type === 'pothole') {
+          ctx.fillStyle = '#1a252f';
+          ctx.beginPath();
+          ctx.ellipse(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, obs.height/2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = '#c0392b';
+          ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        }
+      });
+
+      // Скутер
       ctx.fillStyle = '#e67e22';
       ctx.fillRect(player.x, player.y, player.width, player.height);
 
+      // Рюкзак
       ctx.fillStyle = '#2ecc71';
       ctx.fillRect(player.x + 5, player.y + 30, 20, 15);
+
+      // Екран Game Over
+      if (gameOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('📦 Вантаж знищено!', canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = '14px sans-serif';
+        ctx.fillText('Натисни 🛵 для рестарту', canvas.width / 2, canvas.height / 2 + 25);
+      }
     }
 
     function update() {
+      if (gameOver) {
+        draw();
+        requestAnimationFrame(update);
+        return;
+      }
+
       if (isAccelerating) {
         if (player.speed < player.maxSpeed) player.speed += 0.2;
       } else {
@@ -148,10 +211,57 @@
       }
 
       roadOffsetY += player.speed;
+
+      // Рахуємо заробіток та спавнимо ями при русі
+      if (player.speed > 0) {
+        money += player.speed * 0.05;
+        spawnTimer += player.speed;
+        if (spawnTimer > 160) {
+          spawnObstacle();
+          spawnTimer = 0;
+        }
+      }
+
+      // Оновлення перешкод та перевірка ударів
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        let obs = obstacles[i];
+        obs.y += player.speed;
+
+        if (checkCollision(player, obs)) {
+          hp -= obs.type === 'car' ? 25 : 15;
+          obstacles.splice(i, 1);
+          
+          if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('error');
+          }
+          
+          if (hp <= 0) {
+            hp = 0;
+            gameOver = true;
+          }
+          continue;
+        }
+
+        if (obs.y > canvas.height) {
+          obstacles.splice(i, 1);
+        }
+      }
+
       document.getElementById('speed').innerText = Math.round(player.speed * 10);
+      document.getElementById('money').innerText = Math.floor(money) + ' ₴';
+      document.getElementById('hp').innerText = hp + '%';
 
       draw();
       requestAnimationFrame(update);
+    }
+
+    function restartGame() {
+      hp = 100;
+      money = 0;
+      obstacles = [];
+      player.x = canvas.width / 2 - 15;
+      player.speed = 0;
+      gameOver = false;
     }
 
     const btnLeft = document.getElementById('btnLeft');
@@ -166,19 +276,23 @@
 
     btnLeft.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (player.x > 10) player.x -= 20;
+      if (!gameOver && player.x > 15) player.x -= 25;
       triggerHaptic();
     });
 
     btnRight.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (player.x < canvas.width - player.width - 10) player.x += 20;
+      if (!gameOver && player.x < canvas.width - player.width - 15) player.x += 25;
       triggerHaptic();
     });
 
     btnGas.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      isAccelerating = true;
+      if (gameOver) {
+        restartGame();
+      } else {
+        isAccelerating = true;
+      }
       triggerHaptic();
     });
 
