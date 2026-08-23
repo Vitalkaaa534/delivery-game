@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Delivery Simulator 3D - City Grid</title>
+  <title>Delivery Simulator 3D - Ultimate Edition</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-dark: #070a12;
-      --card-bg: rgba(15, 23, 42, 0.88);
-      --card-border: rgba(255, 255, 255, 0.15);
+      --bg-dark: #050811;
+      --card-bg: rgba(15, 23, 42, 0.92);
+      --card-border: rgba(255, 255, 255, 0.16);
       --accent-green: #10b981;
       --accent-blue: #3b82f6;
       --accent-yellow: #f59e0b;
       --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
     }
 
     * {
@@ -41,7 +42,7 @@
       width: 100%;
       max-width: 440px;
       height: 100vh;
-      background: #0b0f19;
+      background: #000;
       overflow: hidden;
     }
 
@@ -54,7 +55,7 @@
     /* TOP HUD */
     .hud-top {
       position: absolute;
-      top: calc(env(safe-area-inset-top, 10px) + 6px);
+      top: calc(env(safe-area-inset-top, 10px) + 4px);
       left: 12px;
       right: 12px;
       display: flex;
@@ -73,19 +74,19 @@
       background: var(--card-bg);
       backdrop-filter: blur(12px);
       border: 1px solid var(--card-border);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 20px;
       display: flex;
       align-items: center;
       gap: 8px;
       font-weight: 700;
       font-size: 13px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     }
 
     .stats-group {
       display: flex;
       gap: 6px;
+      align-items: center;
     }
 
     .stat-badge {
@@ -99,7 +100,20 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .btn-menu-open {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
     }
 
     /* MISSION CARD */
@@ -108,12 +122,11 @@
       backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-left: 5px solid var(--accent-yellow);
-      border-radius: 16px;
-      padding: 10px 14px;
+      border-radius: 14px;
+      padding: 8px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       transition: border-color 0.3s;
     }
 
@@ -125,7 +138,7 @@
       font-size: 10px;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       color: #94a3b8;
     }
 
@@ -133,20 +146,19 @@
       font-size: 13px;
       font-weight: 700;
       color: #ffffff;
-      margin-top: 2px;
     }
 
     .mission-reward {
       text-align: right;
       font-weight: 800;
       color: var(--accent-green);
-      font-size: 15px;
+      font-size: 14px;
     }
 
     /* CONTROLS OVERLAY */
     .controls-layer {
       position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 15px) + 14px);
+      bottom: calc(env(safe-area-inset-bottom, 15px) + 12px);
       left: 14px;
       right: 14px;
       display: flex;
@@ -158,36 +170,34 @@
 
     .steering-group {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       pointer-events: auto;
     }
 
-    /* СТИЛЬНІ КНОПКИ КЕРУВАННЯ */
     .btn-ctrl {
       width: 66px;
       height: 66px;
-      background: radial-gradient(circle at 30% 30%, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      background: radial-gradient(circle at 35% 35%, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
       backdrop-filter: blur(16px);
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border: 1.5px solid rgba(255, 255, 255, 0.22);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.15);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.2);
       transition: transform 0.08s, border-color 0.08s, background 0.08s;
       cursor: pointer;
     }
 
     .btn-ctrl svg {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       fill: #e2e8f0;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
     .btn-ctrl:active, .btn-ctrl.pressed {
       transform: scale(0.90);
-      background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.6), rgba(29, 78, 216, 0.8));
+      background: radial-gradient(circle at 35% 35%, rgba(59, 130, 246, 0.7), rgba(29, 78, 216, 0.9));
       border-color: var(--accent-blue);
       box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
     }
@@ -196,7 +206,7 @@
       pointer-events: auto;
       width: 86px;
       height: 86px;
-      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.35), rgba(4, 120, 87, 0.7));
+      background: radial-gradient(circle at 35% 35%, rgba(16, 185, 129, 0.45), rgba(4, 120, 87, 0.85));
       backdrop-filter: blur(16px);
       border: 2px solid var(--accent-green);
       border-radius: 50%;
@@ -212,19 +222,19 @@
 
     .btn-gas-single:active, .btn-gas-single.pressed {
       transform: scale(0.92);
-      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.95));
-      box-shadow: 0 0 28px rgba(16, 185, 129, 0.8);
+      background: radial-gradient(circle at 35% 35%, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 1));
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.8);
     }
 
-    /* TOAST NOTIFICATION */
+    /* TOAST */
     .toast {
       position: absolute;
       top: 45%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0.8);
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.96);
       border: 1.5px solid var(--accent-green);
-      padding: 14px 26px;
+      padding: 14px 24px;
       border-radius: 30px;
       font-weight: 800;
       font-size: 15px;
@@ -240,6 +250,119 @@
     .toast.show {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* MODAL MENU OVERLAY */
+    .menu-modal {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 8, 17, 0.94);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      padding: calc(env(safe-area-inset-top, 20px) + 16px) 18px 24px 18px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .menu-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .menu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .menu-title {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-close-menu {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    /* MENU TABS */
+    .menu-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 10px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* CARDS IN MENU */
+    .menu-card-item {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-action {
+      background: var(--accent-green);
+      border: none;
+      color: white;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-action:disabled {
+      background: #475569;
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -257,9 +380,7 @@
           <div class="stat-badge" style="color: var(--accent-green);">
             💵 <span id="moneyText">0 ₴</span>
           </div>
-          <div class="stat-badge" style="color: var(--accent-yellow);">
-            ⭐ <span id="ratingText">5.0</span>
-          </div>
+          <div class="btn-menu-open" id="btnOpenMenu">⚙️</div>
         </div>
       </div>
 
@@ -276,7 +397,7 @@
       </div>
     </div>
 
-    <!-- CANVAS GAME ENGINE -->
+    <!-- CANVAS ENGINE -->
     <canvas id="gameCanvas"></canvas>
 
     <!-- TOAST -->
@@ -284,7 +405,6 @@
 
     <!-- CONTROLS OVERLAY -->
     <div class="controls-layer">
-      <!-- ЛІВОРУЧ: КЕРУВАННЯ СТРІЛКАМИ -->
       <div class="steering-group">
         <div class="btn-ctrl" id="btnLeft">
           <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -294,10 +414,95 @@
         </div>
       </div>
 
-      <!-- ПРАВОРУЧ: ЄДИНА КНОПКА ГАЗУ -->
       <div class="btn-gas-single" id="btnGas">
         <span style="font-size: 26px; line-height: 1;">⚡</span>
         <span style="font-size: 11px; font-weight: 900; letter-spacing: 0.5px; margin-top: 3px;">ГАЗ</span>
+      </div>
+    </div>
+
+    <!-- GAME MENU MODAL -->
+    <div class="menu-modal" id="menuModal">
+      <div class="menu-header">
+        <div class="menu-title">🎮 Меню Кур'єра</div>
+        <button class="btn-close-menu" id="btnCloseMenu">✕</button>
+      </div>
+
+      <div class="menu-tabs">
+        <button class="tab-btn active" data-tab="tabOrders">📦 Замовлення</button>
+        <button class="tab-btn" data-tab="tabUpgrades">🚀 Покращення</button>
+        <button class="tab-btn" data-tab="tabStats">📊 Статистика</button>
+        <button class="tab-btn" data-tab="tabSettings">⚙️ Налаштування</button>
+      </div>
+
+      <!-- TAB 1: ORDERS -->
+      <div class="tab-content active" id="tabOrders">
+        <div class="menu-card-item">
+          <div>
+            <div style="font-weight: 800; font-size:14px;">Кав'ярня "Lviv Coffee"</div>
+            <div style="font-size: 12px; color: #94a3b8;">Відстань: 1850 м</div>
+          </div>
+          <button class="btn-action" onclick="selectOrder(1800, 280, 'Кав\'ярня \"Lviv Coffee\"')">Взяти +280 ₴</button>
+        </div>
+        <div class="menu-card-item">
+          <div>
+            <div style="font-weight: 800; font-size:14px;">Суші Бар "Oishi"</div>
+            <div style="font-size: 12px; color: #94a3b8;">Відстань: 2600 м</div>
+          </div>
+          <button class="btn-action" onclick="selectOrder(2600, 420, 'Суші Бар \"Oishi\"')">Взяти +420 ₴</button>
+        </div>
+        <div class="menu-card-item">
+          <div>
+            <div style="font-weight: 800; font-size:14px;">Піцерія "Puzata Hata"</div>
+            <div style="font-size: 12px; color: #94a3b8;">Відстань: 3400 м</div>
+          </div>
+          <button class="btn-action" onclick="selectOrder(3400, 590, 'Піцерія \"Puzata Hata\"')">Взяти +590 ₴</button>
+        </div>
+      </div>
+
+      <!-- TAB 2: UPGRADES -->
+      <div class="tab-content" id="tabUpgrades">
+        <div class="menu-card-item">
+          <div>
+            <div style="font-weight: 800; font-size:14px;">⚡ Двигун (Макс. швидкість)</div>
+            <div style="font-size: 12px; color: #94a3b8;" id="upgSpeedLvl">Рівень: 1</div>
+          </div>
+          <button class="btn-action" id="btnUpgSpeed" onclick="buyUpgrade('speed')">500 ₴</button>
+        </div>
+        <div class="menu-card-item">
+          <div>
+            <div style="font-weight: 800; font-size:14px;">🚀 Розгін (Акумулятор)</div>
+            <div style="font-size: 12px; color: #94a3b8;" id="upgAccelLvl">Рівень: 1</div>
+          </div>
+          <button class="btn-action" id="btnUpgAccel" onclick="buyUpgrade('accel')">400 ₴</button>
+        </div>
+      </div>
+
+      <!-- TAB 3: STATS -->
+      <div class="tab-content" id="tabStats">
+        <div class="menu-card-item">
+          <span style="color:#94a3b8;">Виконано доставок:</span>
+          <strong id="statDeliveries">0</strong>
+        </div>
+        <div class="menu-card-item">
+          <span style="color:#94a3b8;">Загальний прибуток:</span>
+          <strong id="statEarned" style="color:var(--accent-green);">0 ₴</strong>
+        </div>
+        <div class="menu-card-item">
+          <span style="color:#94a3b8;">Пройдено км:</span>
+          <strong id="statDistance">0.0 км</strong>
+        </div>
+      </div>
+
+      <!-- TAB 4: SETTINGS -->
+      <div class="tab-content" id="tabSettings">
+        <div class="menu-card-item">
+          <span>🔊 Звук / Вібрація</span>
+          <button class="btn-action" onclick="alert('Звукові ефекти увімкнено')">Увімкнено</button>
+        </div>
+        <div class="menu-card-item">
+          <span>🎨 Графіка</span>
+          <button class="btn-action" style="background:var(--accent-blue);">3D Ultra</button>
+        </div>
       </div>
     </div>
   </div>
@@ -317,77 +522,55 @@
     window.addEventListener('resize', resize);
 
     // ==========================================
-    // СТАН ГРИ ТА ФІЗИКА
+    // СТАН ГРИ ТА СТАТИСТИКА
     // ==========================================
     let money = 0;
-    let rating = 5.0;
+    let totalEarned = 0;
+    let completedDeliveries = 0;
+    let totalDistanceKm = 0;
+
+    const upgrades = {
+      speedLvl: 1,
+      accelLvl: 1
+    };
 
     const player = {
-      x: 0,           // Сміщення на дорозі (-140 до 140)
-      worldZ: 0,      // Загальний пройдений шлях
+      x: 0,
+      worldZ: 0,
       speed: 0,
-      maxSpeed: 10,
-      accel: 0.14,
-      autoBrake: 0.25,
-      turnSpeed: 3.6,
+      maxSpeed: 9.5,
+      accel: 0.13,
+      autoBrake: 0.24,
+      turnSpeed: 3.8,
       angle: 0
     };
 
     const inputState = { left: false, right: false, gas: false };
 
     // ==========================================
-    // СВІТ ГРИ: СВІТЛОФОРИ, КАРТА ТА ПЕРЕШКОДИ
+    // СВІТ ГРИ: 3D КАРТА, ПЕРЕХРЕСТЯ, БУДИНКИ
     // ==========================================
-    const BLOCK_SIZE = 600; // Відстань між перехрестями
-    const Z_FAR = 900;
+    const BLOCK_SIZE = 700;
+    const Z_FAR = 1000;
 
-    // Автомобілі-перешкоди
+    // Машини в трафіку (з об'ємом)
     let trafficCars = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       trafficCars.push({
-        z: 300 + i * 400 + Math.random() * 200,
-        x: (Math.random() > 0.5 ? 1 : -1) * (30 + Math.random() * 50),
-        speed: 2 + Math.random() * 2,
-        color: ['#ef4444', '#3b82f6', '#eab308', '#94a3b8', '#10b981'][Math.floor(Math.random() * 5)]
+        z: 350 + i * 320 + Math.random() * 150,
+        x: (Math.random() > 0.5 ? 1 : -1) * (35 + Math.random() * 50),
+        speed: 2 + Math.random() * 2.5,
+        color: ['#ef4444', '#3b82f6', '#f59e0b', '#94a3b8', '#8b5cf6'][Math.floor(Math.random() * 5)]
       });
     }
 
-    // Дорожні конуси / перешкоди
-    let obstacles = [];
-    for (let i = 0; i < 8; i++) {
-      obstacles.push({
-        z: 250 + i * 350 + Math.random() * 150,
-        x: (Math.random() - 0.5) * 160,
-        type: Math.random() > 0.5 ? 'CONE' : 'OIL'
-      });
-    }
-
-    // Світлофори (кожні 600 метрів на перехрестях)
-    function getTrafficLightState(z) {
-      let cycle = (z + Math.floor(Date.now() / 50)) % 600;
-      return cycle > 320 ? 'RED' : 'GREEN';
-    }
-
-    // ЗАМОВЛЕННЯ (ЗБІЛЬШЕНА ВІДСТАНЬ)
+    // Замовлення
     const deliveryState = {
       phase: 'PICKUP',
       targetZ: 1800,
       reward: 280,
       targetName: 'Кав\'ярня "Lviv Coffee"'
     };
-
-    function spawnNextOrder() {
-      // Суттєво більша відстань (1500 - 3200м)
-      const dist = 1500 + Math.floor(Math.random() * 1700);
-      deliveryState.targetZ = player.worldZ + dist;
-      deliveryState.reward = Math.floor(220 + dist * 0.08);
-      deliveryState.phase = 'PICKUP';
-      deliveryState.targetName = [
-        'Суші Бар "Oishi"', 'Бургерна "Craft"', 'Кав\'ярня "Lviv Coffee"', 
-        'Піцерія "Puzata Hata"', 'Ресторан "Панська Гуральня"'
-      ][Math.floor(Math.random() * 5)];
-      updateMissionUI();
-    }
 
     function updateMissionUI() {
       const card = document.getElementById('missionCard');
@@ -415,7 +598,48 @@
     }
 
     // ==========================================
-    // НАДІЙНІ СЕНСОРНІ ПОДІЇ (POINTER EVENTS)
+    // МЕНЮ ТА ВКАДКИ
+    // ==========================================
+    const menuModal = document.getElementById('menuModal');
+    document.getElementById('btnOpenMenu').addEventListener('click', () => menuModal.classList.add('active'));
+    document.getElementById('btnCloseMenu').addEventListener('click', () => menuModal.classList.remove('active'));
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    function selectOrder(dist, reward, name) {
+      deliveryState.targetZ = player.worldZ + dist;
+      deliveryState.reward = reward;
+      deliveryState.phase = 'PICKUP';
+      deliveryState.targetName = name;
+      updateMissionUI();
+      menuModal.classList.remove('active');
+      showToast('Нове замовлення обрано!');
+    }
+
+    function buyUpgrade(type) {
+      if (type === 'speed' && money >= 500) {
+        money -= 500;
+        upgrades.speedLvl++;
+        player.maxSpeed += 1.5;
+        document.getElementById('upgSpeedLvl').innerText = `Рівень: ${upgrades.speedLvl}`;
+      } else if (type === 'accel' && money >= 400) {
+        money -= 400;
+        upgrades.accelLvl++;
+        player.accel += 0.04;
+        document.getElementById('upgAccelLvl').innerText = `Рівень: ${upgrades.accelLvl}`;
+      }
+      document.getElementById('moneyText').innerText = `${money} ₴`;
+    }
+
+    // ==========================================
+    // СЕНСОРНЕ КЕРУВАННЯ
     // ==========================================
     function setupPointerControl(id, keyName) {
       const btn = document.getElementById(id);
@@ -454,11 +678,11 @@
     // ==========================================
     // 3D ПРОЄКЦІЯ КАМЕРИ
     // ==========================================
-    const FOV = 190;
+    const FOV = 200;
     function project(x, z) {
       let scale = FOV / (z + FOV);
-      let horizonY = canvas.height * 0.36;
-      let bottomY = canvas.height - 40;
+      let horizonY = canvas.height * 0.35;
+      let bottomY = canvas.height - 45;
 
       return {
         x: canvas.width / 2 + (x - player.x) * scale,
@@ -468,102 +692,95 @@
     }
 
     // ==========================================
-    // ЛОГІКА ТА ОНОВЛЕННЯ ГРИ
+    // ОНОВЛЕННЯ ГРИ
     // ==========================================
     function update() {
-      // 1. Газ та автоматичне гальмування
       if (inputState.gas) {
         player.speed = Math.min(player.speed + player.accel, player.maxSpeed);
       } else {
         player.speed = Math.max(player.speed - player.autoBrake, 0);
       }
 
-      // 2. Керування поворотами
       if (inputState.left) {
-        player.x = Math.max(-150, player.x - player.turnSpeed);
-        player.angle = Math.max(-0.18, player.angle - 0.03);
+        player.x = Math.max(-140, player.x - player.turnSpeed);
+        player.angle = Math.max(-0.2, player.angle - 0.04);
       } else if (inputState.right) {
-        player.x = Math.min(150, player.x + player.turnSpeed);
-        player.angle = Math.min(0.18, player.angle + 0.03);
+        player.x = Math.min(140, player.x + player.turnSpeed);
+        player.angle = Math.min(0.2, player.angle + 0.04);
       } else {
-        player.angle *= 0.75;
+        player.angle *= 0.7;
       }
 
-      // 3. Рух вперед
       player.worldZ += player.speed;
+      totalDistanceKm += (player.speed * 0.001);
 
-      // 4. Рух трафіку
+      // Рух авто
       trafficCars.forEach(car => {
         car.z += car.speed;
         if (car.z < player.worldZ - 50) {
-          car.z = player.worldZ + Z_FAR + Math.random() * 300;
-          car.x = (Math.random() > 0.5 ? 1 : -1) * (30 + Math.random() * 60);
-        }
-
-        // Зіткнення з авто
-        let relZ = car.z - player.worldZ;
-        if (relZ > 0 && relZ < 25 && Math.abs(car.x - player.x) < 32) {
-          player.speed = 1; // Різке гальмування при ударi
-          if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+          car.z = player.worldZ + Z_FAR + Math.random() * 200;
+          car.x = (Math.random() > 0.5 ? 1 : -1) * (35 + Math.random() * 50);
         }
       });
 
-      // 5. Зіткнення з конусами / калюжами
-      obstacles.forEach(obs => {
-        if (obs.z < player.worldZ - 50) {
-          obs.z = player.worldZ + Z_FAR + Math.random() * 200;
-          obs.x = (Math.random() - 0.5) * 160;
-        }
-        let relZ = obs.z - player.worldZ;
-        if (relZ > 0 && relZ < 20 && Math.abs(obs.x - player.x) < 24) {
-          player.speed *= 0.6; // Втрата швидкості
-          obs.z += Z_FAR;
-          if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        }
-      });
-
-      // 6. Дистанція та виконання цілей
+      // Дистанція замовлення
       let distRemaining = Math.max(0, Math.round(deliveryState.targetZ - player.worldZ));
       document.getElementById('mDist').innerText = `${distRemaining} м`;
 
-      if (distRemaining <= 20) {
+      if (distRemaining <= 25) {
         if (deliveryState.phase === 'PICKUP') {
           deliveryState.phase = 'DELIVER';
-          const nextDist = 1600 + Math.floor(Math.random() * 1600);
-          deliveryState.targetZ = player.worldZ + nextDist;
+          deliveryState.targetZ = player.worldZ + 1900 + Math.random() * 1200;
           showToast('Замовлення забрано! 📦 Їдь до клієнта');
-          if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
           updateMissionUI();
         } else {
           money += deliveryState.reward;
+          totalEarned += deliveryState.reward;
+          completedDeliveries++;
+
           document.getElementById('moneyText').innerText = `${money} ₴`;
+          document.getElementById('statDeliveries').innerText = completedDeliveries;
+          document.getElementById('statEarned').innerText = `${totalEarned} ₴`;
+          document.getElementById('statDistance').innerText = `${totalDistanceKm.toFixed(1)} км`;
+
           showToast(`Доставку виконано! +${deliveryState.reward} ₴ 🎉`);
-          if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-          spawnNextOrder();
+          
+          // Спавн нового
+          deliveryState.targetZ = player.worldZ + 1800 + Math.random() * 1400;
+          deliveryState.reward = 320 + Math.floor(Math.random() * 200);
+          deliveryState.phase = 'PICKUP';
+          updateMissionUI();
         }
       }
     }
 
     // ==========================================
-    // 3D РЕНДЕРИНГ МІСТА ТА КУР'ЄРА
+    // 3D ПООБ'ЄМНИЙ РЕНДЕРИНГ МІСТА
     // ==========================================
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      let horizonY = canvas.height * 0.36;
+      let horizonY = canvas.height * 0.35;
 
-      // 1. Небо та нічне місто
+      // 1. Нічне небо з градієнтом
       let skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      skyGrad.addColorStop(0, '#030712');
+      skyGrad.addColorStop(0, '#020617');
       skyGrad.addColorStop(1, '#1e1b4b');
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, canvas.width, horizonY);
 
-      // 2. Трава / Тротуари збоку
-      ctx.fillStyle = '#064e3b';
+      // 2. ФОНОВИЙ МІСЬКИЙ СКАЙЛАЙН (ГЛИБИНА КАРТИ ЗА БУДИНКАМИ)
+      ctx.fillStyle = '#0f172a';
+      for (let bgX = -200; bgX < canvas.width + 200; bgX += 45) {
+        let h = 40 + Math.sin(bgX * 0.05) * 25;
+        ctx.fillRect(bgX, horizonY - h, 40, h);
+      }
+
+      // 3. Газони / Тротуари
+      ctx.fillStyle = '#042f2e';
       ctx.fillRect(0, horizonY, canvas.width, canvas.height - horizonY);
 
-      // 3. ДОРОГА, ПЕРЕХРЕСТЯ ТА БУДИНКИ
+      // 4. РЕАЛІСТИЧНА 3D ДОРОГА ТА ПЕРЕХРЕСТЯ
       const ROAD_W = 210;
       const SEGMENTS = 35;
       const segZ = Z_FAR / SEGMENTS;
@@ -583,174 +800,164 @@
 
         let isIntersection = (Math.floor(absZ1 / BLOCK_SIZE) !== Math.floor(absZ2 / BLOCK_SIZE));
 
-        // Обочина / Тротуар
-        let sw1 = (ROAD_W + 40) * p1.scale;
-        let sw2 = (ROAD_W + 40) * p2.scale;
+        // Обочина
+        let sw1 = (ROAD_W + 45) * p1.scale;
+        let sw2 = (ROAD_W + 45) * p2.scale;
         ctx.fillStyle = '#334155';
         ctx.beginPath();
         ctx.moveTo(p1.x - sw1, p1.y); ctx.lineTo(p1.x + sw1, p1.y);
         ctx.lineTo(p2.x + sw2, p2.y); ctx.lineTo(p2.x - sw2, p2.y);
         ctx.fill();
 
-        // Полотно дороги або перехрестя
+        // Полотно дороги
         ctx.fillStyle = isIntersection ? '#1e293b' : '#0f172a';
         ctx.beginPath();
         ctx.moveTo(p1.x - w1, p1.y); ctx.lineTo(p1.x + w1, p1.y);
         ctx.lineTo(p2.x + w2, p2.y); ctx.lineTo(p2.x - w2, p2.y);
         ctx.fill();
 
-        // Дорожня розмітка або Зебра на перехресті
+        // ПОПЕРЕЧНА ДОРОГА НА ПЕРЕХРЕСТІ (ПОПЕРЕЧНІ ВУЛИЦІ)
         if (isIntersection) {
-          // Пішохідний перехід (Зебра)
+          ctx.fillStyle = '#0f172a';
+          let sideW1 = 600 * p1.scale;
+          ctx.fillRect(p1.x - sideW1, p1.y - 4 * p1.scale, sideW1 * 2, (p2.y - p1.y) + 8 * p1.scale);
+
+          // Пішохідна зебра
           ctx.fillStyle = '#ffffff';
-          for (let zx = -w1 + 10; zx < w1 - 10; zx += 25 * p1.scale) {
-            ctx.fillRect(p1.x + zx, p1.y - 4 * p1.scale, 14 * p1.scale, 8 * p1.scale);
+          for (let zx = -w1 + 8; zx < w1 - 8; zx += 20 * p1.scale) {
+            ctx.fillRect(p1.x + zx, p1.y, 12 * p1.scale, (p2.y - p1.y));
           }
         } else {
-          // Центральна подвійна суцільна / переривчаста
-          if (Math.floor(absZ1 / 35) % 2 === 0) {
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(p1.x - 2 * p1.scale, p1.y, 4 * p1.scale, (p2.y - p1.y));
+          // Реалістична переривчаста розмітка
+          if (Math.floor(absZ1 / 30) % 2 === 0) {
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(p1.x - 2.5 * p1.scale, p1.y, 5 * p1.scale, (p2.y - p1.y));
           }
         }
       }
 
-      // 4. ОБ'ЄМНІ БУДИНКИ З БОКІВ
-      for (let bZ = 0; bZ < Z_FAR; bZ += 120) {
-        let absZ = Math.floor((player.worldZ + bZ) / 120) * 120;
+      // 5. ПОБ'ЄМНІ 3D БУДИНКИ (ОБ'ЄМНІ ПРИЗМИ З ФАСАДОМ, БІЧНИМИ ГРАНЯМИ ТА ДАХОМ)
+      for (let bZ = 0; bZ < Z_FAR; bZ += 140) {
+        let absZ = Math.floor((player.worldZ + bZ) / 140) * 140;
         let relZ = absZ - player.worldZ;
-        if (relZ < 10) continue;
+        if (relZ < 15) continue;
 
-        // Перевіряємо чи це не перехрестя
+        // Пропуск для перехресть
         if (absZ % BLOCK_SIZE < 140) continue; 
 
-        let p = project(0, relZ);
-        let bScale = p.scale;
+        let p1 = project(0, relZ);
+        let p2 = project(0, relZ + 110);
+        let s1 = p1.scale;
+        let s2 = p2.scale;
 
-        // Лівий і правий будинки
+        // Малюємо лівий та правий будинки
         [-1, 1].forEach(side => {
-          let bx = p.x + side * (ROAD_W + 90) * bScale;
-          let bw = 110 * bScale;
-          let bh = 140 * bScale;
+          let wallDist = (ROAD_W + 90);
+          
+          let x1_front = p1.x + side * wallDist * s1;
+          let x2_front = p1.x + side * (wallDist + 90) * s1;
 
-          // Фасад
+          let x1_back = p2.x + side * wallDist * s2;
+          let x2_back = p2.x + side * (wallDist + 90) * s2;
+
+          let h1 = 160 * s1;
+          let h2 = 160 * s2;
+
+          // ФРОНТАЛЬНА ГРАНЬ (Фасад)
           ctx.fillStyle = side === -1 ? '#1e293b' : '#334155';
-          ctx.fillRect(bx - bw / 2, p.y - bh, bw, bh);
+          ctx.beginPath();
+          ctx.moveTo(x1_front, p1.y);
+          ctx.lineTo(x2_front, p1.y);
+          ctx.lineTo(x2_front, p1.y - h1);
+          ctx.lineTo(x1_front, p1.y - h1);
+          ctx.fill();
 
-          // Контур та вікна
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(bx - bw / 2, p.y - bh, bw, bh);
+          // БІЧНА ГРАНЬ (Створює 3D-глибину)
+          ctx.fillStyle = side === -1 ? '#0f172a' : '#1e293b';
+          ctx.beginPath();
+          ctx.moveTo(x2_front, p1.y);
+          ctx.lineTo(x2_back, p2.y);
+          ctx.lineTo(x2_back, p2.y - h2);
+          ctx.lineTo(x2_front, p1.y - h1);
+          ctx.fill();
 
-          ctx.fillStyle = (absZ / 120) % 3 === 0 ? '#fef08a' : '#38bdf8';
-          for (let wx = -bw / 3; wx <= bw / 3; wx += 16 * bScale) {
-            for (let wy = -bh + 15 * bScale; wy < -15 * bScale; wy += 22 * bScale) {
-              if (Math.random() > 0.3) {
-                ctx.fillRect(bx + wx - 3 * bScale, p.y + wy, 7 * bScale, 11 * bScale);
-              }
+          // ДАХ БУДИНКУ
+          ctx.fillStyle = '#475569';
+          ctx.beginPath();
+          ctx.moveTo(x1_front, p1.y - h1);
+          ctx.lineTo(x2_front, p1.y - h1);
+          ctx.lineTo(x2_back, p2.y - h2);
+          ctx.lineTo(x1_back, p2.y - h2);
+          ctx.fill();
+
+          // Вікна з підсвічуванням
+          ctx.fillStyle = (absZ / 140) % 2 === 0 ? '#fef08a' : '#38bdf8';
+          let winW = Math.abs(x2_front - x1_front) / 4;
+          for (let wx = 1; wx < 3; wx++) {
+            for (let wy = p1.y - h1 + 15 * s1; wy < p1.y - 20 * s1; wy += 24 * s1) {
+              ctx.fillRect(x1_front + wx * winW, wy, winW * 0.6, 12 * s1);
             }
           }
         });
       }
 
-      // 5. СВІТЛОФОРИ НА ПЕРЕХРЕСТЯХ
-      for (let lightZ = 0; lightZ < Z_FAR; lightZ += BLOCK_SIZE) {
-        let absZ = Math.floor((player.worldZ + lightZ) / BLOCK_SIZE) * BLOCK_SIZE;
-        let relZ = absZ - player.worldZ;
-        if (relZ > 20 && relZ < Z_FAR) {
-          let lp = project(ROAD_W + 20, relZ);
-          let lState = getTrafficLightState(absZ);
-
-          // Стовп світлофора
-          ctx.fillStyle = '#64748b';
-          ctx.fillRect(lp.x - 2, lp.y - 45 * lp.scale, 4, 45 * lp.scale);
-
-          // Коробка світлофора
-          ctx.fillStyle = '#0f172a';
-          ctx.fillRect(lp.x - 6 * lp.scale, lp.y - 65 * lp.scale, 12 * lp.scale, 24 * lp.scale);
-
-          // Лампа
-          ctx.fillStyle = lState === 'RED' ? '#ef4444' : '#10b981';
-          ctx.shadowColor = ctx.fillStyle;
-          ctx.shadowBlur = 12;
-          ctx.beginPath();
-          ctx.arc(lp.x, lp.y - (lState === 'RED' ? 58 : 48) * lp.scale, 4 * lp.scale, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
-
-      // 6. ПЕРЕШКОДИ (КОНУСИ / КАЛЮЖІ / АВТОМОБІЛІ)
-      obstacles.forEach(obs => {
-        let relZ = obs.z - player.worldZ;
-        if (relZ > 5 && relZ < Z_FAR) {
-          let op = project(obs.x, relZ);
-          if (obs.type === 'CONE') {
-            // Дорожній конус
-            ctx.fillStyle = '#f97316';
-            ctx.beginPath();
-            ctx.moveTo(op.x, op.y - 18 * op.scale);
-            ctx.lineTo(op.x - 8 * op.scale, op.y);
-            ctx.lineTo(op.x + 8 * op.scale, op.y);
-            ctx.fill();
-          } else {
-            // Калюжа / Олія
-            ctx.fillStyle = '#0284c788';
-            ctx.beginPath();
-            ctx.ellipse(op.x, op.y, 16 * op.scale, 6 * op.scale, 0, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      });
-
-      // Машини в трафіку
+      // 6. ОБ'ЄМНІ 3D АВТОМОБІЛІ
       trafficCars.forEach(car => {
         let relZ = car.z - player.worldZ;
-        if (relZ > 5 && relZ < Z_FAR) {
-          let cp = project(car.x, relZ);
-          let cw = 36 * cp.scale;
-          let ch = 22 * cp.scale;
+        if (relZ > 8 && relZ < Z_FAR) {
+          let p1 = project(car.x, relZ);
+          let p2 = project(car.x, relZ + 35);
 
-          // Корпус машини ззаду
+          let cw1 = 40 * p1.scale;
+          let cw2 = 40 * p2.scale;
+          let ch1 = 26 * p1.scale;
+          let ch2 = 26 * p2.scale;
+
+          // Задня грань
           ctx.fillStyle = car.color;
+          ctx.fillRect(p1.x - cw1 / 2, p1.y - ch1, cw1, ch1);
+
+          // Дах та бічний 3D нахил
+          ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.roundRect(cp.x - cw / 2, cp.y - ch, cw, ch, 4 * cp.scale);
+          ctx.moveTo(p1.x - cw1 / 2, p1.y - ch1);
+          ctx.lineTo(p1.x + cw1 / 2, p1.y - ch1);
+          ctx.lineTo(p2.x + cw2 / 2, p2.y - ch2);
+          ctx.lineTo(p2.x - cw2 / 2, p2.y - ch2);
           ctx.fill();
 
-          // Дах / Скло
-          ctx.fillStyle = '#0f172a';
-          ctx.fillRect(cp.x - cw / 3, cp.y - ch + 2 * cp.scale, cw / 1.5, ch / 2);
-
-          // Задні червоні габарити
+          // Задні стоп-сигнали з сяйвом
           ctx.fillStyle = '#ef4444';
-          ctx.fillRect(cp.x - cw / 2 + 2, cp.y - 6 * cp.scale, 6 * cp.scale, 4 * cp.scale);
-          ctx.fillRect(cp.x + cw / 2 - 8 * cp.scale, cp.y - 6 * cp.scale, 6 * cp.scale, 4 * cp.scale);
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 8;
+          ctx.fillRect(p1.x - cw1 / 2 + 2, p1.y - 8 * p1.scale, 8 * p1.scale, 5 * p1.scale);
+          ctx.fillRect(p1.x + cw1 / 2 - 10 * p1.scale, p1.y - 8 * p1.scale, 8 * p1.scale, 5 * p1.scale);
+          ctx.shadowBlur = 0;
         }
       });
 
-      // 7. МАРКЕР ЦІЛІ (ЗАМОВЛЕННЯ / КЛІЄНТ)
+      // 7. МАРКЕР МІСЦЯ ПРИЗНАЧЕННЯ
       let targetRelZ = deliveryState.targetZ - player.worldZ;
       if (targetRelZ > 0 && targetRelZ < Z_FAR) {
         let tp = project(0, targetRelZ);
-        let size = 45 * tp.scale;
-
+        let size = 50 * tp.scale;
         let color = deliveryState.phase === 'PICKUP' ? '#f59e0b' : '#10b981';
+
         ctx.strokeStyle = color;
         ctx.fillStyle = color + '33';
-        ctx.lineWidth = 3;
-
+        ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.ellipse(tp.x, tp.y, size * 2.2, size * 0.7, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = color;
-        ctx.font = `bold ${Math.max(12, Math.floor(20 * tp.scale))}px sans-serif`;
+        ctx.font = `bold ${Math.max(12, Math.floor(22 * tp.scale))}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(deliveryState.phase === 'PICKUP' ? '📦 ЗАМОВЛЕННЯ' : '🏁 КЛІЄНТ', tp.x, tp.y - size * 1.4);
       }
 
-      // 8. ДЕТАЛІЗОВАНИЙ КУР'ЄР (ВИД ЗЗАДУ)
+      // 8. ДЕТАЛІЗОВАНИЙ КУР'ЄР (ОБ'ЄМНА МОДЕЛЬ ЗЗАДУ)
       let cx = canvas.width / 2;
       let cy = canvas.height - 65;
 
@@ -758,77 +965,84 @@
       ctx.translate(cx, cy);
       ctx.rotate(player.angle);
 
-      // Тінь під скутером
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      // Тінь скутера
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.beginPath();
-      ctx.ellipse(0, 30, 26, 9, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 32, 28, 9, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Заднє колесо з протектором
+      // Заднє широке колесо з протекторами
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(-5, 12, 10, 20);
+      ctx.fillRect(-6, 12, 12, 22);
 
-      // Заднє крило та глушник
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(7, 10, 5, 14); // Вихлопна труба
-      ctx.fillRect(-9, 14, 18, 6);
+      // Вихлопна труба
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(10, 8, 6, 16);
 
-      // Корпус скутера (Пластік)
-      ctx.fillStyle = '#2563eb';
+      // Корпус скутера (Об'ємні грані)
+      ctx.fillStyle = '#1d4ed8';
       ctx.beginPath();
-      ctx.roundRect(-20, -12, 40, 28, 8);
+      ctx.roundRect(-22, -10, 44, 28, 8);
       ctx.fill();
 
-      // Стоп-сигнал (Палає яскраво при відпусканні газу)
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillRect(-18, -6, 36, 8);
+
+      // Стоп-сигнал
       let isBraking = !inputState.gas && player.speed > 0;
-      ctx.fillStyle = isBraking ? '#ff0000' : '#b91c1c';
+      ctx.fillStyle = isBraking ? '#ff0000' : '#991b1b';
       ctx.shadowColor = isBraking ? '#ff0000' : 'transparent';
-      ctx.shadowBlur = isBraking ? 18 : 0;
-      ctx.fillRect(-11, 12, 22, 5);
+      ctx.shadowBlur = isBraking ? 20 : 0;
+      ctx.fillRect(-12, 12, 24, 6);
       ctx.shadowBlur = 0;
 
-      // Дзеркала заднього виду
+      // Дзеркала
       ctx.fillStyle = '#64748b';
-      ctx.fillRect(-26, -32, 6, 4);
-      ctx.fillRect(20, -32, 6, 4);
+      ctx.fillRect(-28, -34, 7, 4);
+      ctx.fillRect(21, -34, 7, 4);
 
-      // Руки кур'єра на кермі
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(-24, -30, 8, 12);
-      ctx.fillRect(16, -30, 8, 12);
-
-      // ТЕРМОСУМКА (ЯСКРАВА, З СВІТЛОВІДБИТВАЧАМИ ТА ЛОГО)
-      ctx.fillStyle = '#10b981'; // Термосумка зеленого кольору
+      // Тулуб та куртка кур'єра (Анатомічний об'єм)
+      ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.roundRect(-17, -48, 34, 28, 5);
+      ctx.roundRect(-22, -42, 44, 26, 8);
       ctx.fill();
 
-      // Світловідбивні смуги на сумці
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(-15, -44, 30, 3);
-      ctx.fillRect(-15, -26, 30, 3);
+      // ТЕРМОСУМКА (ОБ'ЄМНИЙ КУБ З БІЧНИМИ ГРАНЯМИ)
+      // Задня грань
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.roundRect(-18, -48, 36, 28, 4);
+      ctx.fill();
 
-      // Логотип сумки
+      // Верхня грань (Дах сумки)
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath();
+      ctx.roundRect(-18, -52, 36, 6, 2);
+      ctx.fill();
+
+      // Світловідбивні смуги та лого
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px sans-serif';
+      ctx.fillRect(-16, -44, 32, 3);
+      ctx.fillRect(-16, -26, 32, 3);
+
+      ctx.font = '900 11px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('EXPRESS', 0, -32);
 
-      // Шолом кур'єра з візором
+      // Шолом з прозорим візором
       ctx.fillStyle = '#f59e0b';
       ctx.beginPath();
-      ctx.arc(0, -54, 11, 0, Math.PI * 2);
+      ctx.arc(0, -56, 12, 0, Math.PI * 2);
       ctx.fill();
 
-      // Темна смужка візора шолома
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(-8, -58, 16, 4);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(-8, -60, 16, 4);
 
       ctx.restore();
     }
 
     // ==========================================
-    // ГОЛОВНИЙ ЦИКЛ ГРИ
+    // ГОЛОВНИЙ ЦИКЛ
     // ==========================================
     function gameLoop() {
       update();
@@ -836,11 +1050,9 @@
       requestAnimationFrame(gameLoop);
     }
 
-    spawnNextOrder();
     requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
-
 
 
