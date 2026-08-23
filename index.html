@@ -144,14 +144,14 @@
       };
     }
 
-    // Скутер (Гравець)
+    // Скутер (Гравець) - Сповільнені параметри
     let player = {
-      x: 0, // World X (-135 to 135)
+      x: 0,
       targetX: 0,
-      z: 20, // World Z біля камери
+      z: 20,
       speed: 0,
-      baseSpeed: 4,
-      maxSpeed: 9.5,
+      baseSpeed: 1.8,  // Було 4.0
+      maxSpeed: 4.8,   // Було 9.5
       angle: 0
     };
 
@@ -169,9 +169,9 @@
         particles.push({
           x: x,
           y: y,
-          vx: (Math.random() - 0.5) * 8,
-          vy: (Math.random() - 0.5) * 8 - 2,
-          size: 3 + Math.random() * 5,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6 - 1,
+          size: 3 + Math.random() * 4,
           color: color,
           life: 1
         });
@@ -182,17 +182,17 @@
       particles.push({
         x: screenPos.x + (Math.random() - 0.5) * 6,
         y: screenPos.y + 10,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: 1 + Math.random() * 2,
-        size: 2 + Math.random() * 4,
-        color: 'rgba(148, 163, 184, 0.4)',
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: 0.8 + Math.random() * 1.5,
+        size: 2 + Math.random() * 3,
+        color: 'rgba(148, 163, 184, 0.35)',
         life: 0.5
       });
     }
 
     function spawnObstacle() {
       const isCar = Math.random() > 0.45;
-      const worldX = (Math.random() - 0.5) * 220;
+      const worldX = (Math.random() - 0.5) * 210;
 
       obstacles.push({
         x: worldX,
@@ -218,7 +218,7 @@
         ctx.fillRect(sx, sy, 1.5, 1.5);
       }
 
-      // Силует міських будинків на горизонті
+      // Силует міських будинків
       ctx.fillStyle = '#0f172a';
       const buildingWidths = [35, 25, 45, 30, 50, 20, 40, 35, 45];
       let currX = 0;
@@ -257,7 +257,7 @@
         // Червоно-білий бордюр
         let curbW1 = 16 * p1.scale;
         let curbW2 = 16 * p2.scale;
-        let curbColor = (Math.floor((z1 + roadOffsetY * 5) / 40) % 2 === 0) ? '#ef4444' : '#f8fafc';
+        let curbColor = (Math.floor((z1 + roadOffsetY * 4) / 40) % 2 === 0) ? '#ef4444' : '#f8fafc';
 
         // Лівий бордюр
         ctx.fillStyle = curbColor;
@@ -279,7 +279,7 @@
         ctx.fill();
 
         // Центральна переривчаста лінія
-        if (Math.floor((z1 + roadOffsetY * 6) / 50) % 2 === 0) {
+        if (Math.floor((z1 + roadOffsetY * 5) / 50) % 2 === 0) {
           let dashW1 = 5 * p1.scale;
           let dashW2 = 5 * p2.scale;
           ctx.fillStyle = '#f59e0b';
@@ -298,7 +298,6 @@
       let p = project(obs.x, obs.z);
 
       if (obs.type === 'pothole') {
-        // Вибоїна в перспективі
         let rx = 32 * p.scale;
         let ry = 10 * p.scale;
 
@@ -316,7 +315,6 @@
         ctx.lineWidth = 1.5 * p.scale;
         ctx.stroke();
       } else {
-        // Машина ззаду у 3D
         let w = 70 * p.scale;
         let h = 60 * p.scale;
 
@@ -324,15 +322,11 @@
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(p.x - w/2, p.y - 2, w, 8 * p.scale);
 
-        // Кузов авто (задня частина)
+        // Кузов авто
         ctx.fillStyle = obs.color;
         ctx.beginPath();
         ctx.roundRect(p.x - w/2, p.y - h, w, h, 6 * p.scale);
         ctx.fill();
-
-        // Дах/Верхня частина
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-        ctx.fillRect(p.x - w/2 + 4 * p.scale, p.y - h, w - 8 * p.scale, h * 0.4);
 
         // Заднє скло
         ctx.fillStyle = '#0f172a';
@@ -340,13 +334,13 @@
         ctx.roundRect(p.x - w/2 + 6 * p.scale, p.y - h + 5 * p.scale, w - 12 * p.scale, h * 0.3, 3 * p.scale);
         ctx.fill();
 
-        // Задні ліхтарі (червоне сяйво)
+        // Задні ліхтарі
         ctx.fillStyle = '#ef4444';
         ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 8 * p.scale;
+        ctx.shadowBlur = 6 * p.scale;
         ctx.fillRect(p.x - w/2 + 4 * p.scale, p.y - h * 0.45, 12 * p.scale, 6 * p.scale);
         ctx.fillRect(p.x + w/2 - 16 * p.scale, p.y - h * 0.45, 12 * p.scale, 6 * p.scale);
-        ctx.shadowBlur = 0; // Скидання сяйва
+        ctx.shadowBlur = 0;
 
         // Номерний знак
         ctx.fillStyle = '#f8fafc';
@@ -363,7 +357,7 @@
 
       let scale = p.scale * 1.1;
 
-      // Тінь на асфальті
+      // Тінь
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       ctx.beginPath();
       ctx.ellipse(0, 2, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
@@ -373,24 +367,24 @@
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(-5 * scale, -10 * scale, 10 * scale, 14 * scale);
 
-      // Задня частина скутера / глушник
+      // Глушник / зад
       ctx.fillStyle = '#475569';
       ctx.fillRect(-14 * scale, -22 * scale, 28 * scale, 16 * scale);
 
-      // Корпус скутера
+      // Корпус
       ctx.fillStyle = '#f97316';
       ctx.beginPath();
       ctx.roundRect(-16 * scale, -32 * scale, 32 * scale, 18 * scale, 4 * scale);
       ctx.fill();
 
-      // Стоп-сигнал (Червоне сяйво)
+      // Стоп-сигнал
       ctx.fillStyle = '#ef4444';
       ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 8;
       ctx.fillRect(-8 * scale, -24 * scale, 16 * scale, 5 * scale);
       ctx.shadowBlur = 0;
 
-      // Рюкзак кур'єра (Ззаду виглядає великим і яскравим)
+      // Рюкзак
       ctx.fillStyle = '#22c55e';
       ctx.beginPath();
       ctx.roundRect(-18 * scale, -60 * scale, 36 * scale, 30 * scale, 6 * scale);
@@ -399,17 +393,16 @@
       ctx.lineWidth = 2 * scale;
       ctx.stroke();
 
-      // Деталі рюкзака (світловідбивачі)
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(-14 * scale, -38 * scale, 28 * scale, 3 * scale);
 
-      // Шолом водія (вид ззаду)
+      // Шолом
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
       ctx.arc(0, -68 * scale, 11 * scale, 0, Math.PI * 2);
       ctx.fill();
 
-      // Кермо (видно з боків)
+      // Кермо
       ctx.fillStyle = '#334155';
       ctx.fillRect(-24 * scale, -52 * scale, 48 * scale, 3 * scale);
 
@@ -437,8 +430,8 @@
       ctx.save();
 
       if (shakeTime > 0) {
-        let dx = (Math.random() - 0.5) * 8;
-        let dy = (Math.random() - 0.5) * 8;
+        let dx = (Math.random() - 0.5) * 6;
+        let dy = (Math.random() - 0.5) * 6;
         ctx.translate(dx, dy);
         shakeTime--;
       }
@@ -446,7 +439,6 @@
       drawSkyAndCity();
       draw3DRoad();
 
-      // Сортування об'єктів за дальністю Z (далекі малюються першими)
       obstacles.sort((a, b) => b.z - a.z);
       obstacles.forEach(drawObstacle);
 
@@ -485,45 +477,44 @@
         return;
       }
 
+      // Повільніший розгін
       if (player.speed < player.maxSpeed) {
-        player.speed += 0.05 * timeFactor;
+        player.speed += 0.012 * timeFactor; // Було 0.05
       }
 
-      // Зміщення гравця за пальцем
       let dx = player.targetX - player.x;
-      player.x += dx * 0.22 * timeFactor;
-      player.angle = (dx * 0.003); // Нахил корпусу при повороті
+      player.x += dx * 0.18 * timeFactor;
+      player.angle = (dx * 0.0025);
 
       roadOffsetY += player.speed * timeFactor;
 
-      // Генерируємо вихлопний дим
-      if (Math.random() < 0.5) {
+      if (Math.random() < 0.4) {
         let pPos = project(player.x, player.z);
         createExhaust(pPos);
       }
 
       if (player.speed > 0) {
-        money += player.speed * 0.04 * timeFactor;
+        money += player.speed * 0.08 * timeFactor;
         spawnTimer += player.speed * timeFactor;
         
-        if (spawnTimer > 110) {
+        // Збільшено дистанцію між перешкодами
+        if (spawnTimer > 150) { // Було 110
           spawnObstacle();
           spawnTimer = 0;
         }
       }
 
-      // Рух перешкод на камери
+      // Зменшено швидкість наближення об'єктів (множник 2.0 замість 3.2)
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
-        obs.z -= player.speed * 3.2 * timeFactor;
+        obs.z -= player.speed * 2.0 * timeFactor;
 
-        // Перевірка зіткнення у 3D просторі
         if (obs.z <= player.z + 15 && obs.z >= player.z - 15) {
           if (Math.abs(obs.x - player.x) < 36) {
             let damage = obs.type === 'car' ? 30 : 15;
             hp -= damage;
             
-            shakeTime = 12;
+            shakeTime = 10;
             let pPos = project(obs.x, obs.z);
             createExplosion(pPos.x, pPos.y, obs.type === 'car' ? '#ef4444' : '#64748b');
             
@@ -541,14 +532,13 @@
           }
         }
 
-        // Видалення об'єктів за спиною
         if (obs.z < 0) {
           obstacles.splice(i, 1);
         }
       }
 
-      // Оновлення HUD
-      document.getElementById('speed').innerText = Math.round(player.speed * 8);
+      // Відображення швидкості на HUD
+      document.getElementById('speed').innerText = Math.round(player.speed * 12);
       document.getElementById('money').innerText = Math.floor(money) + ' ₴';
       document.getElementById('hpFill').style.width = hp + '%';
 
@@ -571,7 +561,6 @@
       let rect = canvas.getBoundingClientRect();
       let touchX = clientX - rect.left;
       
-      // Конвертація координати екрана у World X (-135 до 135)
       let normX = (touchX - canvas.width / 2) / (canvas.width / 2);
       player.targetX = Math.max(-135, Math.min(135, normX * 135));
     }
