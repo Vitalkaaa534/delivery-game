@@ -124,7 +124,6 @@
     let spawnTimer = 0;
     let gameOver = false;
 
-    // Генерація перешкод (ями та авто)
     function spawnObstacle() {
       const size = 30 + Math.random() * 15;
       const x = 15 + Math.random() * (canvas.width - size - 30);
@@ -137,7 +136,6 @@
       });
     }
 
-    // Перевірка зіткнень
     function checkCollision(rect1, rect2) {
       return (
         rect1.x < rect2.x + rect2.width &&
@@ -148,11 +146,9 @@
     }
 
     function draw() {
-      // Асфальт
       ctx.fillStyle = '#34495e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Дорожня розмітка
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.setLineDash([20, 20]);
@@ -162,7 +158,6 @@
       ctx.lineTo(canvas.width / 2, canvas.height);
       ctx.stroke();
 
-      // Малювання перешкод
       obstacles.forEach(obs => {
         if (obs.type === 'pothole') {
           ctx.fillStyle = '#1a252f';
@@ -175,15 +170,12 @@
         }
       });
 
-      // Скутер
       ctx.fillStyle = '#e67e22';
       ctx.fillRect(player.x, player.y, player.width, player.height);
 
-      // Рюкзак
       ctx.fillStyle = '#2ecc71';
       ctx.fillRect(player.x + 5, player.y + 30, 20, 15);
 
-      // Екран Game Over
       if (gameOver) {
         ctx.fillStyle = 'rgba(0,0,0,0.8)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -192,7 +184,7 @@
         ctx.textAlign = 'center';
         ctx.fillText('📦 Вантаж знищено!', canvas.width / 2, canvas.height / 2 - 10);
         ctx.font = '14px sans-serif';
-        ctx.fillText('Натисни 🛵 для рестарту', canvas.width / 2, canvas.height / 2 + 25);
+        ctx.fillText('Натисни 🛵 або Пробіл', canvas.width / 2, canvas.height / 2 + 25);
       }
     }
 
@@ -212,7 +204,6 @@
 
       roadOffsetY += player.speed;
 
-      // Рахуємо заробіток та спавнимо ями при русі
       if (player.speed > 0) {
         money += player.speed * 0.05;
         spawnTimer += player.speed;
@@ -222,7 +213,6 @@
         }
       }
 
-      // Оновлення перешкод та перевірка ударів
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
         obs.y += player.speed;
@@ -264,9 +254,28 @@
       gameOver = false;
     }
 
-    const btnLeft = document.getElementById('btnLeft');
-    const btnRight = document.getElementById('btnRight');
-    const btnGas = document.getElementById('btnGas');
+    function moveLeft() {
+      if (!gameOver && player.x > 15) player.x -= 25;
+      triggerHaptic();
+    }
+
+    function moveRight() {
+      if (!gameOver && player.x < canvas.width - player.width - 15) player.x += 25;
+      triggerHaptic();
+    }
+
+    function startGas() {
+      if (gameOver) {
+        restartGame();
+      } else {
+        isAccelerating = true;
+      }
+      triggerHaptic();
+    }
+
+    function stopGas() {
+      isAccelerating = false;
+    }
 
     function triggerHaptic() {
       if (tg.HapticFeedback) {
@@ -274,31 +283,32 @@
       }
     }
 
-    btnLeft.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (!gameOver && player.x > 15) player.x -= 25;
-      triggerHaptic();
+    // Події сенсора та миші
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnGas = document.getElementById('btnGas');
+
+    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); moveLeft(); });
+    btnLeft.addEventListener('mousedown', moveLeft);
+
+    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); moveRight(); });
+    btnRight.addEventListener('mousedown', moveRight);
+
+    btnGas.addEventListener('touchstart', (e) => { e.preventDefault(); startGas(); });
+    btnGas.addEventListener('mousedown', startGas);
+
+    btnGas.addEventListener('touchend', (e) => { e.preventDefault(); stopGas(); });
+    btnGas.addEventListener('mouseup', stopGas);
+
+    // Події клавіатури (для ноутбука/ПК)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'А') moveLeft();
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'В') moveRight();
+      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') startGas();
     });
 
-    btnRight.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (!gameOver && player.x < canvas.width - player.width - 15) player.x += 25;
-      triggerHaptic();
-    });
-
-    btnGas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (gameOver) {
-        restartGame();
-      } else {
-        isAccelerating = true;
-      }
-      triggerHaptic();
-    });
-
-    btnGas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      isAccelerating = false;
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'Ц') stopGas();
     });
 
     update();
